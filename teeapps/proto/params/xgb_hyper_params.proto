@@ -1,0 +1,113 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+package teeapps.params;
+
+// keep params name same as
+// https://xgboost.readthedocs.io/en/stable/parameter.html
+// and https://xgboost.readthedocs.io/en/stable/python/python_api.html
+message XgbHyperParams {
+  // Number of boosting iterations
+  //   range: [1,1024]
+  //   default: 10
+  int64 num_boost_round = 1;
+
+  // Maximum depth of a tree
+  //   range: [1,16]
+  //   default: 6
+  int64 max_depth = 2;
+
+  // Maximum leaf of a tree. 0 indicates no limit.
+  //  range: [0,2^15]
+  //  default: 0
+  int64 max_leaves = 3;
+
+  // Pseudorandom number generator seed
+  //  default: 42
+  int64 seed = 4;
+
+  // learning_rate
+  //   range: (0,1]
+  //   default: 0.3
+  float learning_rate = 5;
+
+  // L2 regularization term on weights
+  //   range: [0,10000]
+  //   default: 1
+  float lambda = 6;
+
+  // Greater than 0 means pre-pruning enabled. If gain of a node
+  // is less than this value, it would be pruned.
+  //   range: [0,10000]
+  //   default: 0
+  float gamma = 7;
+
+  // Subsample ratio of columns when constructing each tree
+  //   range: (0,1]
+  //   default: 1
+  float colsample_bytree = 8;
+
+  // The initial prediction score of all instances, global bias
+  //  range: (0,1)
+  //  default: 0.5
+  float base_score = 9;
+
+  // Minimum sum of instance weight (hessian) needed in a child
+  // If the tree partition step results in a leaf node with the sum of instance weight
+  // less than min_child_weight then the building process will give up further partitioning.
+  //    range：[0, 1000]
+  //    default: 1
+  float min_child_weight = 10;
+
+  // Specify the learning objective
+  //  allowed: ["reg:squarederror", "binary:logistic"]
+  //  default: "binary:logistic"
+  string objective = 11;
+
+  // L1 regularization term on weights.
+  // Increasing this value will make model more conservative
+  //   range: [0,10000]
+  //   default: 0
+  float alpha = 12;
+
+  // Subsample ratio of the training instance
+  //   range: (0,1]
+  //   default: 1
+  float subsample = 13;
+
+  // Maximum number of discrete bins to bucket continuous features.
+  // Only used if tree_method is set to hist, approx or gpu_hist.
+  //   范围: (0,254)
+  //   默认: 10
+  int64 max_bin = 14;
+
+  // The tree construction algorithm used in XGBoost
+  //   auto: Use heuristic to choose the fastest method.
+  //      For small dataset, exact greedy (exact) will be used.
+  //      For larger dataset, approximate algorithm (approx) will be chosen.
+  //   exact: Exact greedy algorithm. Enumerates all split candidates.
+  //   approx: Approximate greedy algorithm using quantile sketch and gradient histogram.
+  //   hist: Faster histogram optimized approximate greedy algorithm.
+  //
+  //   default: auto
+  string tree_method = 15;
+
+  // Which booster to use
+  //  allowed: ["gbtree", "gblinear", "dart"]
+  //  default: "gbtree"
+  string booster = 16;
+}

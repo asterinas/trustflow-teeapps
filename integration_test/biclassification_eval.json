@@ -1,0 +1,64 @@
+{
+  "sf_node_eval_param": {
+    "domain": "ml.eval",
+    "name": "biclassification_eval",
+    "version": "0.0.1",
+    "attr_paths": [
+      "bucket_num",
+      "min_item_cnt_per_bucket",
+      "input/predictions/label",
+      "input/predictions/score"
+    ],
+    "attrs": [
+      {
+        "i64": 2
+      },
+      {
+        "i64": 2
+      },
+      {
+        "ss": [
+          "label"
+        ]
+      },
+      {
+        "ss": [
+          "score"
+        ]
+      }
+    ],
+    "inputs": [
+      {
+        "name": "predict_table",
+        "type": "sf.table.individual",
+        "meta": {
+          "@type": "type.googleapis.com/secretflow.spec.v1.IndividualTable",
+          "schema": {
+            "ids": [
+              "id"
+            ],
+            "labels": [
+              "score",
+              "label"
+            ],
+            "idTypes": [
+              "int64"
+            ],
+            "labelTypes": [
+              "float32",
+              "bool"
+            ]
+          }
+        },
+        "data_refs": [
+          {
+            "uri": "file://input/?id=predict_uuid&&uri=/host/testdata/breast_cancer/predict_table"
+          }
+        ]
+      }
+    ],
+    "output_uris": [
+      "file://output/?id=report_uuid&&uri=/host/testdata/breast_cancer/biclass_eval_report"
+    ]
+  }
+}

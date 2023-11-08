@@ -1,0 +1,89 @@
+# Copyright 2023 Ant Group Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+load("@teeapps//bazel:teeapps.bzl", "teeapps_cc_binary", "teeapps_cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+teeapps_cc_library(
+    name = "subprocess",
+    srcs = ["subprocess.cc"],
+    hdrs = ["subprocess.h"],
+    deps = [
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+teeapps_cc_library(
+    name = "app",
+    srcs = ["app.cc"],
+    hdrs = ["app.h"],
+    deps = [
+        "//teeapps/framework:capsule_manager_client",
+        "//teeapps/framework:constants",
+        "//teeapps/framework:subprocess",
+        "//teeapps/kuscia:kuscia_client",
+        "//teeapps/kuscia:kuscia_task_config",
+        "//teeapps/local:local_task_config",
+        "//teeapps/proto:cc_sf_apis_proto",
+        "//teeapps/proto:cc_sf_spec_proto",
+        "//teeapps/proto:cc_task_proto",
+        "//teeapps/utils:crypto_util",
+        "//teeapps/utils:data_uri_util",
+        "//teeapps/utils:io_util",
+        "//teeapps/utils:output_dist_data_util",
+        "//teeapps/utils:ra_util",
+        "//teeapps/utils:task_config_util",
+        "@com_github_rapidjson//:rapidjson",
+        "@yacl//yacl/crypto/base:asymmetric_util",
+    ],
+)
+
+teeapps_cc_library(
+    name = "capsule_manager_client",
+    srcs = ["capsule_manager_client.cc"],
+    hdrs = ["capsule_manager_client.h"],
+    deps = [
+        "//teeapps/framework:constants",
+        "//teeapps/proto:cc_sf_apis_proto",
+        "//teeapps/utils:crypto_util",
+        "//teeapps/utils:json2pb",
+        "//teeapps/utils:ra_util",
+        "@com_github_gflags_gflags//:gflags",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_github_yaml_cpp//:yaml-cpp",
+        "@cppcodec",
+        "@yacl//yacl/crypto/utils:rand",
+    ],
+)
+
+teeapps_cc_library(
+    name = "constants",
+    hdrs = ["constants.h"],
+    deps = [
+        "//teeapps/component:component_list",
+        "//teeapps/proto:cc_sf_spec_proto",
+    ],
+)
+
+teeapps_cc_binary(
+    name = "main",
+    srcs = ["main.cc"],
+    deps = [
+        "//teeapps/framework:app",
+        "//teeapps/utils:log",
+        "@com_github_gflags_gflags//:gflags",
+        "@yacl//yacl/utils:scope_guard",
+    ],
+)
