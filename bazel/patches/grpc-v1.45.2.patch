@@ -61,3 +61,4 @@ index c2cf0027a4..9540390900 100644
 +    go_register_toolchains(go_version = "host")
 
      apple_rules_dependencies(ignore_version_differences = ignore_version_differences)
+
