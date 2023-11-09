@@ -1,0 +1,75 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+package teeapps.params;
+
+message WoeBinningParams {
+
+  // Binning config
+  message FeatureBinningConf {
+    // Feature name
+    string feature = 1;
+
+    // How to bin features
+    //  "quantile" -> equal frequency
+    //  "bucket" -> equal width
+    string binning_method = 2;
+
+    // Bin num
+    int64 n_divide = 3;
+  }
+
+  repeated FeatureBinningConf feature_binning_confs = 1;
+
+  // Which value represent positive value in label
+  string positive_label = 2;
+
+  repeated string feature_selects = 3;
+}
+
+message WoeBinningReport {
+  message VariableBinningResult {
+    message Bin {
+      string label = 1; // bin label
+      double woe = 2;   // woe value
+      double iv = 3;    // information value
+      uint64 total_count = 4;    // total sample num
+      uint64 positive_count = 5; // positive sample num
+    }
+
+    string feature = 1;    // col name in csv header
+    int32 bin_count = 2;   // bin count
+    double iv = 3;         // sum of ivs
+    repeated Bin bins = 4;
+  }
+  repeated VariableBinningResult variable_ivs = 1;
+}
+
+// Woe 分箱规则
+message WoeBinningRule {
+  message Rule {
+    message Bin {
+      double right = 1; // right bound
+      double woe = 2;   // woe value
+    }
+
+    string feature = 1;    // col name in csv header
+    repeated Bin bins = 2; // bin array
+    Bin else_bin = 3;      // unexpected value bin
+  }
+  repeated Rule rules = 1;
+}

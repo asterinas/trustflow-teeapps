@@ -1,0 +1,142 @@
+{
+  "sf_node_eval_param": {
+    "domain": "ml.train",
+    "name": "xgb_train",
+    "version": "0.0.1",
+    "attr_paths": [
+      "num_boost_round",
+      "max_depth",
+      "max_leaves",
+      "seed",
+      "learning_rate",
+      "lambda",
+      "gamma",
+      "colsample_bytree",
+      "base_score",
+      "min_child_weight",
+      "objective",
+      "alpha",
+      "subsample",
+      "max_bin",
+      "tree_method",
+      "booster",
+      "input/train_dataset/ids",
+      "input/train_dataset/label"
+    ],
+    "attrs": [
+      {
+        "i64": 100
+      },
+      {
+        "i64": 6
+      },
+      {
+        "i64": 0
+      },
+      {
+        "i64": 42
+      },
+      {
+        "f": 0.3
+      },
+      {
+        "f": 1
+      },
+      {
+        "f": 0
+      },
+      {
+        "f": 1
+      },
+      {
+        "f": 0.5
+      },
+      {
+        "f": 1
+      },
+      {
+        "s": "binary:logistic"
+      },
+      {
+        "f": 0
+      },
+      {
+        "f": 1
+      },
+      {
+        "i64": 10
+      },
+      {
+        "s": "auto"
+      },
+      {
+        "s": "gbtree"
+      },
+      {
+        "ss": [
+          "id"
+        ]
+      },
+      {
+        "ss": [
+          "target"
+        ]
+      }
+    ],
+    "inputs": [
+      {
+        "name": "train_dataset",
+        "type": "sf.table.individual",
+        "meta": {
+          "@type": "type.googleapis.com/secretflow.spec.v1.IndividualTable",
+          "schema": {
+            "ids": [
+              "id"
+            ],
+            "features": [
+              "mean radius",
+              "mean texture",
+              "mean perimeter",
+              "mean area",
+              "mean smoothness",
+              "mean compactness",
+              "mean concavity",
+              "mean concave points",
+              "mean symmetry",
+              "mean fractal dimension"
+            ],
+            "labels": [
+              "target"
+            ],
+            "id_types": [
+              "int"
+            ],
+            "feature_types": [
+              "float",
+              "float",
+              "float",
+              "float",
+              "float",
+              "float",
+              "float",
+              "float",
+              "float",
+              "float"
+            ],
+            "label_types": [
+              "bool"
+            ]
+          }
+        },
+        "data_refs": [
+          {
+            "uri": "file://input/?id=train_uuid&&uri=/host/testdata/breast_cancer/train_table"
+          }
+        ]
+      }
+    ],
+    "output_uris": [
+      "file://output/?id=model_uuid&&uri=/host/testdata/breast_cancer/xgb_model"
+    ]
+  }
+}

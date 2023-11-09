@@ -1,0 +1,37 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+package teeapps.params;
+
+message PredictionParams {
+  message OutputControl {
+    // Whether or not to save real label column into output pred table
+    bool output_label = 1;
+    // Column name for label
+    string label_field_name = 2;
+    // Column name for predictions
+    string score_field_name = 3;
+    // Whether to save id column into output pred table
+    bool output_id = 4;
+    // Column name for id
+    string id_field_name = 5;
+    // Column names into output pred table
+    repeated string col_names = 6;
+  }
+
+  OutputControl output_control = 1;
+}

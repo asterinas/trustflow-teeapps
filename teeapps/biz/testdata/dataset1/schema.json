@@ -1,0 +1,25 @@
+{
+    "delimiter": ",",
+    "fields": [
+        {
+            "name": "ID",
+            "type": "DT_INT32"
+        },
+        {
+            "name": "NAME",
+            "type": "DT_STRING"
+        },
+        {
+            "name": "AGE",
+            "type": "DT_FLOAT"
+        },
+        {
+            "name": "ADDRESS",
+            "type": "DT_STRING"
+        },
+        {
+            "name": "SALARY",
+            "type": "DT_FLOAT"
+        }
+    ]
+}

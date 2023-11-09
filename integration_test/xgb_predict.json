@@ -1,0 +1,95 @@
+{
+  "sf_node_eval_param": {
+    "domain": "ml.predict",
+    "name": "xgb_predict",
+    "version": "0.0.1",
+    "attr_paths": [
+      "pred_name",
+      "save_label",
+      "label_name",
+      "save_id",
+      "id_name"
+    ],
+    "attrs": [
+      {
+        "s": "score"
+      },
+      {
+        "b": true
+      },
+      {
+        "s": "label"
+      },
+      {
+        "b": true
+      },
+      {
+        "s": "id"
+      }
+    ],
+    "inputs": [
+      {
+        "name": "test_table",
+        "type": "sf.table.individual",
+        "meta": {
+          "@type": "type.googleapis.com/secretflow.spec.v1.IndividualTable",
+          "schema": {
+            "ids": [
+              "id"
+            ],
+            "features": [
+              "mean radius",
+              "mean texture",
+              "mean perimeter",
+              "mean area",
+              "mean smoothness",
+              "mean compactness",
+              "mean concavity",
+              "mean concave points",
+              "mean symmetry",
+              "mean fractal dimension"
+            ],
+            "labels": [
+              "target"
+            ],
+            "id_types": [
+              "int"
+            ],
+            "feature_types": [
+              "float",
+              "float",
+              "float",
+              "float",
+              "float",
+              "float",
+              "float",
+              "float",
+              "float",
+              "float"
+            ],
+            "label_types": [
+              "bool"
+            ]
+          }
+        },
+        "data_refs": [
+          {
+            "uri": "file://input/?id=test_uuid&&uri=/host/testdata/breast_cancer/test_table"
+          }
+        ]
+      },
+      {
+        "name": "xgb_model",
+        "type": "sf.model.xgb",
+        "data_refs": [
+          {
+            "uri": "file://input/?id=model_uuid&&uri=/host/testdata/breast_cancer/xgb_model"
+          }
+        ]
+      }
+    ],
+    "output_uris": [
+      "file://output/?id=predict_uuid&&uri=/host/testdata/breast_cancer/predict_table"
+    ]
+  }
+}

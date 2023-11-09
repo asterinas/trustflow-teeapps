@@ -1,0 +1,54 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+import "secretflow/spec/v1/data.proto";
+
+package teeapps;
+
+message TaskConfig {
+  message Input {
+    // 数据本地路径
+    // 对应下载下来的数据的路径
+    string data_path = 1;
+    // 数据 schema
+    // 改为component中定义
+    secretflow.spec.v1.TableSchema schema = 2;
+    // 表名(optional),针对 SQL 算子
+    string table_name = 3;
+  }
+
+  message Output {
+    // 数据本地路径
+    // NodeEvalParam.output_uris
+    string data_path = 1;
+    // 数据 schema 本地路径:
+    //  App 将输出数据 schema 输出为 json 文件保存在本地，
+    //  Framework 解析本地 json 文件得到 proto
+    //  secretflow.spec.v1.TableSchema
+    string data_schema_path = 2;
+  }
+
+  // eg. OP_PSI OP_XGB 从component的domain/name中映射
+  string app_type = 1;
+  // 参数参见teeapps/proto/params
+  google.protobuf.Any params = 2;
+  // 输入信息
+  repeated Input inputs = 3;
+  // 输出信息
+  repeated Output outputs = 4;
+}

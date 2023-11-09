@@ -1,0 +1,4 @@
+ID,NAME,AGE,ADDRESS,SALARY,INFO,FAMILY_ID
+1,Paul,3,California,20000.00,{"name":"Tom"},2001
+2,Allen,4,Texas,15000.00,{"name": "Sarah"},2001
+3,Teddy,5,Norway,20000.00,{"name": "John"},2000

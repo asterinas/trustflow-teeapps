@@ -1,0 +1,83 @@
+{
+  "sf_node_eval_param": {
+    "domain": "preprocessing",
+    "name": "train_test_split",
+    "version": "0.0.1",
+    "attr_paths": [
+      "train_size",
+      "fix_random",
+      "random_state",
+      "shuffle"
+    ],
+    "attrs": [
+      {
+        "f": 0.8
+      },
+      {
+        "b": true
+      },
+      {
+        "i64": 1024
+      },
+      {
+        "b": true
+      }
+    ],
+    "inputs": [
+      {
+        "name": "input_data",
+        "type": "sf.table.individual",
+        "meta": {
+          "@type": "type.googleapis.com/secretflow.spec.v1.IndividualTable",
+          "schema": {
+            "ids": [
+              "id"
+            ],
+            "features": [
+              "mean radius",
+              "mean texture",
+              "mean perimeter",
+              "mean area",
+              "mean smoothness",
+              "mean compactness",
+              "mean concavity",
+              "mean concave points",
+              "mean symmetry",
+              "mean fractal dimension"
+            ],
+            "labels": [
+              "target"
+            ],
+            "id_types": [
+              "int"
+            ],
+            "feature_types": [
+              "float",
+              "float",
+              "float",
+              "float",
+              "float",
+              "float",
+              "float",
+              "float",
+              "float",
+              "float"
+            ],
+            "label_types": [
+              "bool"
+            ]
+          }
+        },
+        "data_refs": [
+          {
+            "uri": "file://input/?id=join_uuid&&uri=/host/testdata/breast_cancer/join_table"
+          }
+        ]
+      }
+    ],
+    "output_uris": [
+      "file://output/?id=train_uuid&&uri=/host/testdata/breast_cancer/train_table",
+      "file://output/?id=test_uuid&&uri=/host/testdata/breast_cancer/test_table"
+    ]
+  }
+}
