@@ -40,7 +40,8 @@ void WriteFile(const std::string& file_path, yacl::ByteContainerView content) {
 void CopyFile(const std::string& src_file_path,
               const std::string& dst_file_path) {
   std::ifstream source_file(src_file_path.c_str(), std::ios::binary);
-  std::ofstream dst_file(dst_file_path.c_str(), std::ios::binary | std::ios::trunc);
+  std::ofstream dst_file(dst_file_path.c_str(),
+                         std::ios::binary | std::ios::trunc);
   YACL_ENFORCE(source_file, "open source file fail.");
   YACL_ENFORCE(dst_file, "open dst file fail.");
   dst_file << source_file.rdbuf();
