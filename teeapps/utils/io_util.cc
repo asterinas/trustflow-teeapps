@@ -14,6 +14,8 @@
 
 #include "teeapps/utils/io_util.h"
 
+#include <fstream>
+
 #include "yacl/base/byte_container_view.h"
 #include "yacl/io/stream/file_io.h"
 
@@ -33,6 +35,18 @@ void WriteFile(const std::string& file_path, yacl::ByteContainerView content) {
   yacl::io::FileOutputStream out(file_path);
   out.Write(content.data(), content.size());
   out.Close();
+}
+
+void CopyFile(const std::string& src_file_path,
+              const std::string& dst_file_path) {
+  std::ifstream source_file(src_file_path.c_str(), std::ios::binary);
+  std::ofstream dst_file(dst_file_path.c_str(),
+                         std::ios::binary | std::ios::trunc);
+  YACL_ENFORCE(source_file, "open source file fail.");
+  YACL_ENFORCE(dst_file, "open dst file fail.");
+  dst_file << source_file.rdbuf();
+  source_file.close();
+  dst_file.close();
 }
 
 void MergeVerticalCsv(const std::string& left_file_path,

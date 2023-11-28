@@ -74,8 +74,8 @@ NO_COLOR="\033[0m"
 DOCKER_REG="secretflow"
 
 
-IMAGE_TAG=${DOCKER_REG}/teeapps-sgx:${VERSION}
-LATEST_TAG=${DOCKER_REG}/teeapps-sgx:latest
+IMAGE_TAG=${DOCKER_REG}/teeapps-sgx-ubuntu20.04:${VERSION}
+LATEST_TAG=${DOCKER_REG}/teeapps-sgx-ubuntu20.04:latest
 echo -e "Building ${GREEN}${IMAGE_TAG}${NO_COLOR}"
 cd ../.. && docker build . -f deployment/prod/Dockerfile -t ${IMAGE_TAG} \
   --build-arg config_templates="$(cat deployment/prod/config_templates.yml)" \

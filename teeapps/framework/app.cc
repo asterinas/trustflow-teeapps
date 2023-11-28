@@ -360,8 +360,7 @@ void App::ProcessOutput() {
       const std::string output_full_path =
           storage_config_.local_fs().wd() + "/" + output_uri;
       // upload result
-      std::filesystem::remove(output_full_path);
-      std::filesystem::copy(local_res_path, output_full_path);
+      teeapps::utils::CopyFile(local_res_path, output_full_path);
     }
   } else if (app_mode_ == teeapps::framework::kAppModeLocal) {
     for (const auto& uri : node_eval_param_.output_uris()) {
@@ -370,8 +369,7 @@ void App::ProcessOutput() {
       const std::string local_res_path = teeapps::utils::GenDataPath(output_id);
       const std::string output_full_path = output_uri;
       //  upload result
-      std::filesystem::remove(output_full_path);
-      std::filesystem::copy(local_res_path, output_full_path);
+      teeapps::utils::CopyFile(local_res_path, output_full_path);
     }
   } else {
     YACL_THROW("app mode {} not support", app_mode_);

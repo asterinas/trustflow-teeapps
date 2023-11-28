@@ -23,6 +23,9 @@ std::string ReadFile(const std::string& file_path);
 
 void WriteFile(const std::string& file_path, yacl::ByteContainerView content);
 
+void CopyFile(const std::string& src_file_path,
+              const std::string& dst_file_path);
+
 void MergeVerticalCsv(const std::string& left_file_path,
                       const std::string& right_file_path,
                       const std::string& dest_file_path);
