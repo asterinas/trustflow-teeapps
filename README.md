@@ -32,9 +32,9 @@ We suppose you have prepared dataset and got encrypted files: alice.csv.enc, bob
 #### Simulation Mode
 1. Pull and run simulation docker
 ```sh
-docker pull secretflow/teeapps-sim:0.1.0b0
+docker pull secretflow/teeapps-sim-ubuntu20.04:latest
 
-docker run -it --name teeapps-sim --network=host secretflow/teeapps-sim:0.1.0b0 bash
+docker run -it --name teeapps-sim --network=host secretflow/teeapps-sim-ubuntu20.04:latest bash
 ```
 
 2. Copy encrypted file into docker (on host machine)
@@ -94,9 +94,9 @@ python3 convert.py --cert_path carol.crt --prikey_path carol.key --task_config_p
 #### Production Mode
 1. Pull and run production docker
 ```sh
-docker pull secretflow/teeapps-sgx:0.1.0b0
+docker pull secretflow/teeapps-sgx-ubuntu20.04:latest
 
-docker run -it --name teeapps-sgx --network=host -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision --privileged=true secretflow/teeapps-sgx:0.1.0b0 bash
+docker run -it --name teeapps-sgx --network=host -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision --privileged=true secretflow/teeapps-sgx-ubuntu20.04:latest bash
 ```
 2. Modify PCCS
 

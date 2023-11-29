@@ -1,6 +1,6 @@
 {
     ".": {
-        "TrustedFlow": "TrustedFlow",
+        "trustedflow": "trustedflow",
         "First-party TrustedFlow components.": "官方TrustedFlow组件"
     },
     "preprocessing/psi:0.0.1": {

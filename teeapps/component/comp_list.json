@@ -1,5 +1,5 @@
 {
-    "name": "TrustedFlow",
+    "name": "trustedflow",
     "desc": "First-party TrustedFlow components.",
     "version": "0.0.1",
     "comps": [
