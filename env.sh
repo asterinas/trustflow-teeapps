@@ -16,7 +16,7 @@
 #
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-image=secretflow/teeapps-gcc11-dev:0.1.0b0
+image=secretflow/teeapps-gcc11-dev:latest
 DOCKER=docker
 project=teeapps
 if [[ $1 == 'enter' ]]; then
