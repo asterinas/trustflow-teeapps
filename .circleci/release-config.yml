@@ -40,6 +40,7 @@ jobs:
           name: Build and Push Docker image
           command: |
             echo "test release"
+            VERSION = 0.1.2b0
 
             # login docker
             docker login -u secretflow -p ${DOCKER_DEPLOY_TOKEN}
