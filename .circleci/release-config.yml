@@ -49,3 +49,9 @@ jobs:
             cd deployment/dev
             bash ./build.sh -l -v ${VERSION}
 
+# Invoke jobs via workflows
+# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
+workflows:
+  docker-image-publish-workflow:
+    jobs:
+      - docker_image_publish
