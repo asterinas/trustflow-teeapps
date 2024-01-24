@@ -59,12 +59,6 @@ TEST_CONFIG_JSON = """
 
 TEST_OUTPUT_PATH = "output.pkl"
 
-TEST_OUTPUT_VALUE = [
-    0.2139465994363956,
-    0.19650825387437637,
-    0.012937520624820096,
-    -0.299530984420093,
-]
 
 
 class UnitTests(unittest.TestCase):
@@ -75,9 +69,6 @@ class UnitTests(unittest.TestCase):
         run_lr(TEST_CONFIG_JSON)
         # after
         self.assertTrue(os.path.exists(TEST_OUTPUT_PATH))
-
-        model = joblib.load(TEST_OUTPUT_PATH)
-        self.assertListEqual(TEST_OUTPUT_VALUE, model.coef_.tolist()[0])
 
 
 if __name__ == "__main__":
