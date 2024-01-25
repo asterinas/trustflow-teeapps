@@ -72,14 +72,32 @@ jobs:
       - run:
           name: Build and Push Docker image
           command: |
-            echo << pipeline.parameters.GHA_Version >>
+            SIM_VERSION=<< pipeline.parameters.GHA_Version >>
+            OCCLUM_VERSION=occlum29.05-<< pipeline.parameters.GHA_Version >>
+            echo "sim image version: ${SIM_VERSION}"
+            echo "occlum sgx2 image version: ${OCCLUM_VERSION}"
 
             # login docker
             docker login -u secretflow -p ${DOCKER_DEPLOY_TOKEN}
 
             # Build sim image
             cd deployment/dev
-            bash ./build.sh -l -v << pipeline.parameters.GHA_Version >>
+            bash ./build.sh -l -v ${SIM_VERSION}
+            cd ../..
+
+            # Push sim image
+            docker push secretflow/teeapps-sim-ubuntu20.04:${SIM_VERSION}
+            docker push secretflow/teeapps-sim-ubuntu20.04:latest
+
+            # Build occlum sgx2 image
+            cd deployment/prod
+            bash ./build.sh -l -v ${OCCLUM_VERSION}
+            cd ../..
+
+            # Push occlum sgx2 image
+            docker push secretflow/teeapps-sgx-ubuntu20.04:${OCCLUM_VERSION}
+            docker push secretflow/teeapps-sgx-ubuntu20.04:latest
+
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
