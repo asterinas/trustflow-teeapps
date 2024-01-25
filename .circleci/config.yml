@@ -15,6 +15,9 @@
 # Use the latest 2.1 version of CircleCI pipeline process engine.
 # See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
+
+setup: true
+
 parameters:
   GHA_Actor:
     type: string
@@ -28,6 +31,9 @@ parameters:
   GHA_Meta:
     type: string
     default: ""
+  GHA_Version:
+    type: string
+    default: ""
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
@@ -36,7 +42,7 @@ jobs:
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
     docker:
-      - image: secretflow/ubuntu-base-ci:0.8
+      - image: secretflow/ubuntu-base-ci:latest
     resource_class: 2xlarge+
     shell: /bin/bash --login -eo pipefail
     # Add steps to the job
@@ -57,12 +63,55 @@ jobs:
             mkdir -p ~/.ssh && ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
             bazel --output_base=target build //teeapps/...
             bazel --output_base=target test //teeapps/...
+  docker_image_publish:
+    docker:
+      - image: cimg/deploy:2023.06.1
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build and Push Docker image
+          command: |
+            SIM_VERSION=<< pipeline.parameters.GHA_Version >>
+            OCCLUM_VERSION=occlum29.05-<< pipeline.parameters.GHA_Version >>
+            echo "sim image version: ${SIM_VERSION}"
+            echo "occlum sgx2 image version: ${OCCLUM_VERSION}"
+
+            # login docker
+            docker login -u secretflow -p ${DOCKER_DEPLOY_TOKEN}
+
+            # Build sim image
+            cd deployment/dev
+            bash ./build.sh -l -v ${SIM_VERSION}
+            cd ../..
+
+            # Push sim image
+            docker push secretflow/teeapps-sim-ubuntu20.04:${SIM_VERSION}
+            docker push secretflow/teeapps-sim-ubuntu20.04:latest
+
+            # Build occlum sgx2 image
+            cd deployment/prod
+            bash ./build.sh -l -v ${OCCLUM_VERSION}
+            cd ../..
+
+            # Push occlum sgx2 image
+            docker push secretflow/teeapps-sgx-ubuntu20.04:${OCCLUM_VERSION}
+            docker push secretflow/teeapps-sgx-ubuntu20.04:latest
+
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  ut:
+  ut-workflow:
     when:
       not: << pipeline.parameters.GHA_Action >>
     jobs:
       - linux_ut
+  docker-image-publish-workflow:
+    when:
+      and:
+        - equal: ["docker_image_publish", << pipeline.parameters.GHA_Action >>]
+        - exits: << pipeline.parameters.GHA_Version >>
+    jobs:
+      - docker_image_publish
+

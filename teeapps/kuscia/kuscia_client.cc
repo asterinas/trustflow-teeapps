@@ -14,6 +14,8 @@
 
 #include "teeapps/kuscia/kuscia_client.h"
 
+#include <cstdlib>
+
 #include "gflags/gflags.h"
 #include "include/grpcpp/security/credentials.h"
 #include "include/grpcpp/security/tls_credentials_options.h"
@@ -28,9 +30,9 @@ namespace {
 constexpr uint32_t kGrpcMaxMsgSizeMb = 1024;
 constexpr uint32_t kGrpcTimeoutMs = 5 * 1000;
 
-constexpr char kClientCertPath[] = "/etc/kuscia/certs/client.crt";
-constexpr char kClientKeyPath[] = "/etc/kuscia/certs/client.key";
-constexpr char kCaCertPath[] = "/etc/kuscia/certs/ca.crt";
+constexpr char kClientCertPathEnv[] = "CLIENT_CERT_FILE";
+constexpr char kClientKeyPathEnv[] = "CLIENT_PRIVATE_KEY_FILE";
+constexpr char kCaCertPathEnv[] = "TRUSTED_CA_FILE";
 }  // namespace
 
 KusciaClient::KusciaClient(const std::string& datamesh_endpoint) {
@@ -38,10 +40,20 @@ KusciaClient::KusciaClient(const std::string& datamesh_endpoint) {
   chan_args.SetMaxReceiveMessageSize(kGrpcMaxMsgSizeMb * 1024 * 1024);
   chan_args.SetGrpclbFallbackTimeout(kGrpcTimeoutMs);
 
+  const char* cert_path = std::getenv(kClientCertPathEnv);
+  YACL_ENFORCE(cert_path != nullptr, "{} env variable not set ",
+               kClientCertPathEnv);
+  const char* key_path = std::getenv(kClientKeyPathEnv);
+  YACL_ENFORCE(key_path != nullptr, "{} env variable not set ",
+               kClientKeyPathEnv);
+  const char* ca_cert_path = std::getenv(kCaCertPathEnv);
+  YACL_ENFORCE(ca_cert_path != nullptr, "{} env variable not set ",
+               kCaCertPathEnv);
+
   ::grpc::SslCredentialsOptions ssl_opts;
-  ssl_opts.pem_cert_chain = teeapps::utils::ReadFile(kClientCertPath);
-  ssl_opts.pem_private_key = teeapps::utils::ReadFile(kClientKeyPath);
-  ssl_opts.pem_root_certs = teeapps::utils::ReadFile(kCaCertPath);
+  ssl_opts.pem_cert_chain = teeapps::utils::ReadFile(cert_path);
+  ssl_opts.pem_private_key = teeapps::utils::ReadFile(key_path);
+  ssl_opts.pem_root_certs = teeapps::utils::ReadFile(ca_cert_path);
   const auto creds = ::grpc::SslCredentials(ssl_opts);
   const auto chan =
       ::grpc::CreateCustomChannel(datamesh_endpoint, creds, chan_args);
