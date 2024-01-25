@@ -18,9 +18,6 @@ version: 2.1
 
 setup: true
 
-orbs:
-  continuation: circleci/continuation@0.3.1
-
 parameters:
   GHA_Actor:
     type: string
@@ -66,6 +63,23 @@ jobs:
             mkdir -p ~/.ssh && ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
             bazel --output_base=target build //teeapps/...
             bazel --output_base=target test //teeapps/...
+  docker_image_publish:
+    docker:
+      - image: cimg/deploy:2023.06.1
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build and Push Docker image
+          command: |
+            echo << pipeline.parameters.GHA_Version >>
+
+            # login docker
+            docker login -u secretflow -p ${DOCKER_DEPLOY_TOKEN}
+
+            # Build sim image
+            cd deployment/dev
+            bash ./build.sh -l -v << pipeline.parameters.GHA_Version >>
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
@@ -81,8 +95,5 @@ workflows:
         - equal: ["docker_image_publish", << pipeline.parameters.GHA_Action >>]
         - exits: << pipeline.parameters.GHA_Version >>
     jobs:
-      - continuation/continue:
-          configuration_path: .circleci/release-config.yml
-          parameters:
-            GHA_Version: << pipeline.parameters.GHA_Version >>
+      - docker_image_publish
 
