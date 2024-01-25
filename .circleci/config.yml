@@ -34,6 +34,9 @@ parameters:
   GHA_Meta:
     type: string
     default: ""
+  GHA_Version:
+    type: string
+    default: ""
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
@@ -75,6 +78,10 @@ workflows:
   docker-image-publish-workflow:
     when:
       equal: ["docker_image_publish", << pipeline.parameters.GHA_Action >>]
+      exits: << pipeline.parameters.GHA_Version >>
     jobs:
       - continuation/continue:
           configuration_path: .circleci/release-config.yml
+          parameters:
+            GHA_Version: << pipeline.parameters.GHA_Version >>
+
