@@ -77,8 +77,9 @@ workflows:
       - linux_ut
   docker-image-publish-workflow:
     when:
-      equal: ["docker_image_publish", << pipeline.parameters.GHA_Action >>]
-      exits: << pipeline.parameters.GHA_Version >>
+      and:
+        equal: ["docker_image_publish", << pipeline.parameters.GHA_Action >>]
+        exits: << pipeline.parameters.GHA_Version >>
     jobs:
       - continuation/continue:
           configuration_path: .circleci/release-config.yml
