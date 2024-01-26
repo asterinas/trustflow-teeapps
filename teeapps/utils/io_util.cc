@@ -22,6 +22,13 @@
 namespace teeapps {
 namespace utils {
 
+namespace {
+constexpr int kMaxBufferSize = 1024 * 1024;  // 1MB
+
+using UniqueFile = std::unique_ptr<FILE, decltype(&std::fclose)>;
+
+}  // namespace
+
 std::string ReadFile(const std::string& file_path) {
   yacl::io::FileInputStream in(file_path);
   std::string content;
@@ -39,14 +46,23 @@ void WriteFile(const std::string& file_path, yacl::ByteContainerView content) {
 
 void CopyFile(const std::string& src_file_path,
               const std::string& dst_file_path) {
-  std::ifstream source_file(src_file_path.c_str(), std::ios::binary);
-  std::ofstream dst_file(dst_file_path.c_str(),
-                         std::ios::binary | std::ios::trunc);
-  YACL_ENFORCE(source_file, "open source file fail.");
-  YACL_ENFORCE(dst_file, "open dst file fail.");
-  dst_file << source_file.rdbuf();
-  source_file.close();
-  dst_file.close();
+  auto source =
+      UniqueFile(std::fopen(src_file_path.data(), "rb"), &std::fclose);
+  auto dest = UniqueFile(std::fopen(dst_file_path.data(), "wb"), &std::fclose);
+
+  YACL_ENFORCE(source != nullptr && source.get() != nullptr,
+               "Failed to open {}", src_file_path);
+  YACL_ENFORCE(dest != nullptr && source.get() != nullptr, "Failed to open {}",
+               dst_file_path);
+
+  uint8_t buf[kMaxBufferSize];
+  size_t bytes_read;
+  while ((bytes_read = std::fread(buf, sizeof(uint8_t), kMaxBufferSize,
+                                  source.get())) > 0) {
+    YACL_ENFORCE_EQ(std::fwrite(buf, sizeof(uint8_t), bytes_read, dest.get()),
+                    bytes_read, "Failed to write to {} when copying from {}",
+                    dst_file_path, src_file_path);
+  }
 }
 
 void MergeVerticalCsv(const std::string& left_file_path,
