@@ -22,6 +22,10 @@
 namespace teeapps {
 namespace utils {
 
+namespace {
+constexpr int kMaxBufferSize = 1024 * 1024;  // 1MB
+}
+
 std::string ReadFile(const std::string& file_path) {
   yacl::io::FileInputStream in(file_path);
   std::string content;
@@ -39,14 +43,20 @@ void WriteFile(const std::string& file_path, yacl::ByteContainerView content) {
 
 void CopyFile(const std::string& src_file_path,
               const std::string& dst_file_path) {
-  std::ifstream source_file(src_file_path.c_str(), std::ios::binary);
-  std::ofstream dst_file(dst_file_path.c_str(),
-                         std::ios::binary | std::ios::trunc);
-  YACL_ENFORCE(source_file, "open source file fail.");
-  YACL_ENFORCE(dst_file, "open dst file fail.");
-  dst_file << source_file.rdbuf();
-  source_file.close();
-  dst_file.close();
+  FILE* source = std::fopen(src_file_path.data(), "rb");
+  FILE* dest = std::fopen(dst_file_path.data(), "wb");
+
+  YACL_ENFORCE(source != nullptr, "Failed to open {}", src_file_path);
+  YACL_ENFORCE(dest != nullptr, "Failed to open {}", dst_file_path);
+
+  uint8_t buf[kMaxBufferSize];
+  size_t bytes_read;
+  while ((bytes_read = std::fread(buf, 1, kMaxBufferSize, source)) > 0) {
+    std::fwrite(buf, 1, bytes_read, dest);
+  }
+
+  std::fclose(source);
+  std::fclose(dest);
 }
 
 void MergeVerticalCsv(const std::string& left_file_path,
