@@ -24,7 +24,10 @@ namespace utils {
 
 namespace {
 constexpr int kMaxBufferSize = 1024 * 1024;  // 1MB
-}
+
+using UniqueFile = std::unique_ptr<FILE, decltype(&std::fclose)>;
+
+}  // namespace
 
 std::string ReadFile(const std::string& file_path) {
   yacl::io::FileInputStream in(file_path);
@@ -43,20 +46,23 @@ void WriteFile(const std::string& file_path, yacl::ByteContainerView content) {
 
 void CopyFile(const std::string& src_file_path,
               const std::string& dst_file_path) {
-  FILE* source = std::fopen(src_file_path.data(), "rb");
-  FILE* dest = std::fopen(dst_file_path.data(), "wb");
+  auto source =
+      UniqueFile(std::fopen(src_file_path.data(), "rb"), &std::fclose);
+  auto dest = UniqueFile(std::fopen(dst_file_path.data(), "wb"), &std::fclose);
 
-  YACL_ENFORCE(source != nullptr, "Failed to open {}", src_file_path);
-  YACL_ENFORCE(dest != nullptr, "Failed to open {}", dst_file_path);
+  YACL_ENFORCE(source != nullptr && source.get() != nullptr,
+               "Failed to open {}", src_file_path);
+  YACL_ENFORCE(dest != nullptr && source.get() != nullptr, "Failed to open {}",
+               dst_file_path);
 
   uint8_t buf[kMaxBufferSize];
   size_t bytes_read;
-  while ((bytes_read = std::fread(buf, 1, kMaxBufferSize, source)) > 0) {
-    std::fwrite(buf, 1, bytes_read, dest);
+  while ((bytes_read = std::fread(buf, sizeof(uint8_t), kMaxBufferSize,
+                                  source.get())) > 0) {
+    YACL_ENFORCE_EQ(std::fwrite(buf, sizeof(uint8_t), bytes_read, dest.get()),
+                    bytes_read, "Failed to write to {} when copying from {}",
+                    dst_file_path, src_file_path);
   }
-
-  std::fclose(source);
-  std::fclose(dest);
 }
 
 void MergeVerticalCsv(const std::string& left_file_path,
