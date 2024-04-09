@@ -16,13 +16,13 @@
 #
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-image=secretflow/teeapps-gcc11-dev:latest
+image=secretflow/trustedflow-dev-occlum-ubuntu22.04:latest
 DOCKER=docker
 project=teeapps
 if [[ $1 == 'enter' ]]; then
-    sudo $DOCKER exec -it ${project}-build-ubuntu-$(whoami)-sgx bash
+    $DOCKER exec -it ${project}-build-ubuntu-$(whoami) bash
 else
-    sudo $DOCKER run --name ${project}-build-ubuntu-$(whoami)-sgx -td \
+    $DOCKER run --name ${project}-build-ubuntu-$(whoami) -td \
         --network=host \
         -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision \
         -v $DIR:$DIR \

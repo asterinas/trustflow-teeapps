@@ -36,7 +36,7 @@ teeapps_cc_library(
         "//teeapps/kuscia:kuscia_client",
         "//teeapps/kuscia:kuscia_task_config",
         "//teeapps/local:local_task_config",
-        "//teeapps/proto:cc_sf_apis_proto",
+        "//teeapps/proto:cc_sf_apis_grpc",
         "//teeapps/proto:cc_sf_spec_proto",
         "//teeapps/proto:cc_task_proto",
         "//teeapps/utils:crypto_util",
@@ -45,8 +45,7 @@ teeapps_cc_library(
         "//teeapps/utils:output_dist_data_util",
         "//teeapps/utils:ra_util",
         "//teeapps/utils:task_config_util",
-        "@com_github_rapidjson//:rapidjson",
-        "@yacl//yacl/crypto/base:asymmetric_util",
+        "@yacl//yacl/crypto/base:key_utils",
     ],
 )
 
@@ -56,13 +55,11 @@ teeapps_cc_library(
     hdrs = ["capsule_manager_client.h"],
     deps = [
         "//teeapps/framework:constants",
-        "//teeapps/proto:cc_sf_apis_proto",
+        "//teeapps/proto:cc_sf_apis_grpc",
         "//teeapps/utils:crypto_util",
         "//teeapps/utils:json2pb",
         "//teeapps/utils:ra_util",
-        "@com_github_gflags_gflags//:gflags",
         "@com_github_grpc_grpc//:grpc++",
-        "@com_github_yaml_cpp//:yaml-cpp",
         "@cppcodec",
         "@yacl//yacl/crypto/utils:rand",
     ],

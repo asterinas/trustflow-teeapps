@@ -20,14 +20,15 @@ BLUE='\033[1;34m'
 NC='\033[0m'
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-workspace_dir="$script_dir"
+workspace_dir="$(dirname "$script_dir")"
 
 target_dir="/home/teeapp"
 python_dir="$target_dir/python-occlum"
 
 mkdir -p $target_dir/task
 
-bazel --output_base=target build -c opt --define tee_type=sgx2 //teeapps/...
+cd $workspace_dir
+bazel --output_base=target build -c opt --copt=-DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG --define tee_type=sgx2 //teeapps/...
 rm -rf $target_dir/occlum
 mkdir -p $target_dir/occlum
 
@@ -65,26 +66,31 @@ if [ ! -d $python_dir ]; then
 fi
 
 cd occlum_instance
-copy_bom -f $workspace_dir/python.yaml --root image --include-dir /opt/occlum/etc/template
+copy_bom -f $workspace_dir/deployment/occlum/python.yaml --root image --include-dir /opt/occlum/etc/template
 
 mkdir -p image/bin/
 cp $workspace_dir/bazel-bin/teeapps/framework/main image/bin/main
-mkdir -p image/etc/kubetee
 mkdir -p logs
-cp $workspace_dir/deployment/conf/unified_attestation.json image/etc/kubetee/unified_attestation.json
 
 # Copy glibc so to image.
 mkdir -p image/opt/occlum/glibc/lib/
-cp /opt/occlum/glibc/lib/libdl*.so* image/opt/occlum/glibc/lib/
-cp /opt/occlum/glibc/lib/librt*.so* image/opt/occlum/glibc/lib/
+pushd image/opt/occlum/glibc/lib/
+cp -a /opt/occlum/glibc/lib/libdl*.so* .
+cp -a /opt/occlum/glibc/lib/librt*.so* .
 
 #DNS
-cp /opt/occlum/glibc/lib/libnss_dns.so.2 \
-  /opt/occlum/glibc/lib/libnss_files.so.2 \
-  /opt/occlum/glibc/lib/libresolv.so.2 \
-  image/opt/occlum/glibc/lib/
+cp -a /opt/occlum/glibc/lib/libnss_dns.so* \
+  /opt/occlum/glibc/lib/libnss_files.so* \
+  /opt/occlum/glibc/lib/libresolv.so* \
+  .
 
-cp $workspace_dir/Occlum.json .
+# dcap and it's deps
+cp -an /usr/lib/x86_64-linux-gnu/lib*so* .
+popd
+
+chmod +x image/lib64/ld-linux-x86-64.so.2
+
+cp $workspace_dir/deployment/occlum/Occlum.json .
 
 mkdir -p certs
 

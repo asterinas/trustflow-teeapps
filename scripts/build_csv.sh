@@ -20,18 +20,19 @@ BLUE='\033[1;34m'
 NC='\033[0m'
 
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}"  )" >/dev/null 2>&1 && pwd )"
-workspace_dir=$script_dir
+workspace_dir="$(dirname "$script_dir")"
 
 target_dir="/home/teeapp"
 python_dir="$target_dir/python"
 
 mkdir -p $target_dir/task
 
-bazel --output_base=target build -c opt //teeapps/...
-rm -rf $target_dir/sim
-mkdir -p $target_dir/sim
+cd $workspace_dir
+bazel --output_base=target build -c opt --copt=-DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG --define tee_type=csv //teeapps/...
+rm -rf $target_dir/csv
+mkdir -p $target_dir/csv
 
-cd $target_dir/sim
+cd $target_dir/csv
 mkdir -p teeapps/biz
 
 # copy biz algorithms
@@ -45,7 +46,7 @@ for folder in $workspace_dir/teeapps/biz/*; do
   fi
 done
 
-cd $target_dir/sim/teeapps/biz
+cd $target_dir/csv/teeapps/biz
 # Note: secretflow/spec and teeapps/proto can copy from any biz dir
 cp -rL $workspace_dir/bazel-bin/teeapps/biz/psi/psi.runfiles/sf_spec/secretflow ./
 # copy common
@@ -61,7 +62,7 @@ if [ ! -d $python_dir ];then
     exit 1
 fi
 
-cp $workspace_dir/bazel-bin/teeapps/framework/main $target_dir/sim/teeapps/.
+cp $workspace_dir/bazel-bin/teeapps/framework/main $target_dir/csv/teeapps/.
 
 mkdir -p /host/certs
 

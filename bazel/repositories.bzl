@@ -16,12 +16,8 @@
 This module contains build rules for project dependencies.
 """
 
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository", "new_git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
-
-
-SECRETFLOW_GIT = "https://github.com/secretflow"
 
 def gen_bazel_version():
     bazel_version_repository(
@@ -40,80 +36,49 @@ bazel_version_repository = repository_rule(
 def teeapps_dependencies():
     """This module contains build rules for project dependencies.
     """
-    _com_github_gperftools_gperftools()
+    _com_github_trustedflow()
     _com_github_grpc_grpc()
     _com_github_rules_proto_grpc()
-    _com_github_openssl_openssl()
-    _com_github_gabime_spdlog()
-    _com_github_fmtlib_fmt()
     _com_github_gflags_gflags()
     _com_github_curl()
     _com_github_httplib()
-    _aliyun_oss_cpp_sdk()
     _com_github_rapidjson()
     _com_github_yaml_cpp()
     _com_github_cppcodec()
+    _com_github_sf_apis()
+    _com_github_sf_spec()
+    _com_github_kuscia_proto()
 
-    maybe(
-        git_repository,
-        name = "yacl",
-        commit = "f933d7ff4caf0d9f7ea84cc3e9f51a9a6ee9eeca",
-        remote = "{}/yacl.git".format(SECRETFLOW_GIT),
-    )
-
-    maybe(
-        new_git_repository,
-        name = "sf_apis",
-        commit = "47a9d68e3c8c455eaa5c4950593ea8f2b26b7bc1",
-        remote = "{}/secure-data-capsule-apis.git".format(SECRETFLOW_GIT),
-        build_file = "//bazel:sf_apis.BUILD",
-    )
-
-    maybe(
-        new_git_repository,
-        name = "sf_spec",
-        commit = "d8b5860b74fff711b2a693d3da168e7f974a3d2d",
-        remote = "{}/spec.git".format(SECRETFLOW_GIT),
-        build_file = "//bazel:sf_spec.BUILD",
-    )
-
-    maybe(
-        new_git_repository,
-        name = "kuscia_proto",
-        remote = "{}/kuscia.git".format(SECRETFLOW_GIT),
-        commit = "f7cf6b86f6520db5fd867cbcd95ce58b340f8692",
-        build_file = "//bazel:kuscia.BUILD",
-    )
-
-def _com_github_gperftools_gperftools():
+def _com_github_trustedflow():
     maybe(
         http_archive,
-        name = "com_github_gperftools_gperftools",
+        name = "trustedflow",
+        sha256 = "d4e6a26b794e07a9988d8396586605530df594d19c48a818071d4e9c3a385587",
+        strip_prefix = "trustedflow-0.2.0b0",
         type = "tar.gz",
-        strip_prefix = "gperftools-2.9.1",
-        sha256 = "ea566e528605befb830671e359118c2da718f721c27225cbbc93858c7520fee3",
         urls = [
-            "https://github.com/gperftools/gperftools/releases/download/gperftools-2.9.1/gperftools-2.9.1.tar.gz",
+            "https://github.com/secretflow/trustedflow/archive/refs/tags/0.2.0b0.tar.gz",
         ],
-        build_file = "//bazel:gperftools.BUILD",
     )
 
 def _com_github_grpc_grpc():
     maybe(
         http_archive,
         name = "com_github_grpc_grpc",
-        sha256 = "e18b16f7976aab9a36c14c38180f042bb0fd196b75c9fd6a20a2b5f934876ad6",
-        strip_prefix = "grpc-1.45.2",
+        sha256 = "fb1ed98eb3555877d55eb2b948caca44bc8601c6704896594de81558639709ef",
+        strip_prefix = "grpc-1.50.1",
         type = "tar.gz",
-        patches = ["//bazel:patches/grpc-v1.45.2.patch"],
         patch_args = ["-p1"],
+        # Set grpc to use local go toolchain
+        patches = ["@teeapps//bazel:patches/grpc.patch"],
         urls = [
-            "https://github.com/grpc/grpc/archive/refs/tags/v1.45.2.tar.gz",
+            "https://github.com/grpc/grpc/archive/refs/tags/v1.50.1.tar.gz",
         ],
     )
 
 def _com_github_rules_proto_grpc():
-    http_archive(
+    maybe(
+        http_archive,
         name = "rules_proto_grpc",
         type = "tar.gz",
         sha256 = "7954abbb6898830cd10ac9714fbcacf092299fda00ed2baf781172f545120419",
@@ -121,44 +86,6 @@ def _com_github_rules_proto_grpc():
         urls = [
             "https://github.com/rules-proto-grpc/rules_proto_grpc/archive/refs/tags/3.1.1.tar.gz",
         ],
-    )
-
-def _com_github_openssl_openssl():
-    maybe(
-        http_archive,
-        name = "com_github_openssl_openssl",
-        sha256 = "dac036669576e83e8523afdb3971582f8b5d33993a2d6a5af87daa035f529b4f",
-        type = "tar.gz",
-        strip_prefix = "openssl-OpenSSL_1_1_1l",
-        urls = [
-            "https://github.com/openssl/openssl/archive/refs/tags/OpenSSL_1_1_1l.tar.gz",
-        ],
-        build_file = "//bazel:openssl.BUILD",
-    )
-
-def _com_github_gabime_spdlog():
-    maybe(
-        http_archive,
-        name = "com_github_gabime_spdlog",
-        strip_prefix = "spdlog-1.9.2",
-        type = "tar.gz",
-        sha256 = "6fff9215f5cb81760be4cc16d033526d1080427d236e86d70bb02994f85e3d38",
-        build_file = "//bazel:spdlog.BUILD",
-        urls = [
-            "https://github.com/gabime/spdlog/archive/refs/tags/v1.9.2.tar.gz",
-        ],
-    )
-
-def _com_github_fmtlib_fmt():
-    maybe(
-        http_archive,
-        name = "com_github_fmtlib_fmt",
-        strip_prefix = "fmt-8.1.1",
-        sha256 = "3d794d3cf67633b34b2771eb9f073bde87e846e0d395d254df7b211ef1ec7346",
-        urls = [
-            "https://github.com/fmtlib/fmt/archive/refs/tags/8.1.1.tar.gz",
-        ],
-        build_file = "//bazel:fmtlib.BUILD",
     )
 
 def _com_github_gflags_gflags():
@@ -177,7 +104,7 @@ def _com_github_curl():
     maybe(
         http_archive,
         name = "com_github_curl",
-        build_file = "//bazel:curl.BUILD",
+        build_file = "@teeapps//bazel:curl.BUILD",
         sha256 = "816e41809c043ff285e8c0f06a75a1fa250211bbfb2dc0a037eeef39f1a9e427",
         strip_prefix = "curl-8.4.0",
         urls = [
@@ -191,23 +118,10 @@ def _com_github_httplib():
         name = "com_github_httplib",
         sha256 = "e620d030215733c4831fdc7813d5eb37a6fd599f8192a730662662e1748a741b",
         strip_prefix = "cpp-httplib-0.11.2",
-        build_file = "//bazel:httplib.BUILD",
+        build_file = "@teeapps//bazel:httplib.BUILD",
         type = "tar.gz",
         urls = [
             "https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.11.2.tar.gz",
-        ],
-    )
-
-def _aliyun_oss_cpp_sdk():
-    maybe(
-        http_archive,
-        name = "com_github_aliyun_oss_cpp_sdk",
-        sha256 = "adee3beb0b7b88bfd947eb9dae5e0d22c8b3f315563aab076a7b60c140125f31",
-        strip_prefix = "aliyun-oss-cpp-sdk-1.9.0",
-        build_file = "//:bazel/oss_sdk.BUILD",
-        type = "tar.gz",
-        urls = [
-            "https://codeload.github.com/aliyun/aliyun-oss-cpp-sdk/tar.gz/1.9.0",
         ],
     )
 
@@ -217,7 +131,7 @@ def _com_github_rapidjson():
         name = "com_github_rapidjson",
         sha256 = "bf7ced29704a1e696fbccf2a2b4ea068e7774fa37f6d7dd4039d0787f8bed98e",
         strip_prefix = "rapidjson-1.1.0",
-        build_file = "//bazel:rapidjson.BUILD",
+        build_file = "@teeapps//bazel:rapidjson.BUILD",
         type = "tar.gz",
         urls = [
             "https://github.com/Tencent/rapidjson/archive/v1.1.0.tar.gz",
@@ -238,11 +152,50 @@ def _com_github_yaml_cpp():
 
 def _com_github_cppcodec():
     maybe(
-        new_git_repository,
+        http_archive,
         name = "cppcodec",
-        remote = "https://github.com/tplgy/cppcodec.git",
-        commit = "9f67d7026d3dee8fc6a0af614d97f9365cee2872",
-        patches = ["//bazel:patches/cppcodec.patch"],
+        build_file = "@teeapps//bazel:cppcodec.BUILD",
+        urls = [
+            "https://github.com/tplgy/cppcodec/archive/refs/tags/v0.2.tar.gz",
+        ],
+        strip_prefix = "cppcodec-0.2",
+        sha256 = "0edaea2a9d9709d456aa99a1c3e17812ed130f9ef2b5c2d152c230a5cbc5c482",
+        patches = ["@teeapps//bazel:patches/cppcodec.patch"],
         patch_args = ["-p1"],
-        build_file = "//bazel:cppcodec.BUILD",
+    )
+
+def _com_github_sf_apis():
+    maybe(
+        http_archive,
+        name = "sf_apis",
+        urls = [
+            "https://github.com/secretflow/secure-data-capsule-apis/archive/47a47f0f0096fdcc2c13c8ba3b86448d2795b829.tar.gz",
+        ],
+        strip_prefix = "secure-data-capsule-apis-47a47f0f0096fdcc2c13c8ba3b86448d2795b829",
+        build_file = "@teeapps//bazel:sf_apis.BUILD",
+        sha256 = "c7b52eb51be3b4f1f380b8fb7cdd80a101e59e9471ca01d7b6c3441bd463dc3b",
+    )
+
+def _com_github_sf_spec():
+    maybe(
+        http_archive,
+        name = "sf_spec",
+        urls = [
+            "https://github.com/secretflow/spec/archive/d8b5860b74fff711b2a693d3da168e7f974a3d2d.tar.gz",
+        ],
+        strip_prefix = "spec-d8b5860b74fff711b2a693d3da168e7f974a3d2d",
+        sha256 = "49d02af77de9af23be60299c8dec611a678dbab707a3be3aa7766a8417710c0d",
+        build_file = "@teeapps//bazel:sf_spec.BUILD",
+    )
+
+def _com_github_kuscia_proto():
+    maybe(
+        http_archive,
+        name = "kuscia_proto",
+        urls = [
+            "https://github.com/secretflow/kuscia/archive/f7cf6b86f6520db5fd867cbcd95ce58b340f8692.tar.gz",
+        ],
+        strip_prefix = "kuscia-f7cf6b86f6520db5fd867cbcd95ce58b340f8692",
+        sha256 = "bf1e163c0ac888fd3aa0391c6f6532b62937ae6393dce89d2a2d72cb9b049f94",
+        build_file = "@teeapps//bazel:kuscia.BUILD",
     )

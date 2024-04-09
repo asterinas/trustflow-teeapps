@@ -19,7 +19,7 @@
 #include "teeapps/utils/crypto_util.h"
 #include "teeapps/utils/log.h"
 
-DEFINE_string(plat, "sgx", "platform. sim, sgx");
+DEFINE_string(plat, "sim", "platform. sim/sgx/tdx/csv");
 DEFINE_string(app_mode, "local", "app mode, local or kuscia");
 DEFINE_string(entry_task_config_path, "", "entry task config path");
 DEFINE_string(data_mesh_endpoint, "", "data mesh endpoint");

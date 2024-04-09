@@ -21,7 +21,7 @@ teeapps_cc_library(
     srcs = ["local_task_config.cc"],
     hdrs = ["local_task_config.h"],
     deps = [
-        "//teeapps/proto:cc_sf_apis_proto",
+        "//teeapps/proto:cc_sf_apis_grpc",
         "//teeapps/proto:cc_sf_spec_proto",
         "//teeapps/utils:crypto_util",
         "//teeapps/utils:io_util",
@@ -29,6 +29,6 @@ teeapps_cc_library(
         "@com_github_rapidjson//:rapidjson",
         "@cppcodec",
         "@yacl//yacl/base:exception",
-        "@yacl//yacl/crypto/base:rsa_signing",
+        "@yacl//yacl/crypto/base/sign:rsa_signing",
     ],
 )

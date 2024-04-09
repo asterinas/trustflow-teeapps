@@ -12,17 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@teeapps//bazel:teeapps.bzl", "teeapps_cmake_external")
-
 package(default_visibility = ["//visibility:public"])
 
-filegroup(
-    name = "all_srcs",
-    srcs = glob(["**"]),
-)
-
-teeapps_cmake_external(
+cc_library(
     name = "httplib",
-    lib_source = ":all_srcs",
-    out_headers_only = True,
+    hdrs = ["httplib.h"],
+    copts = ["-DCPPHTTPLIB_OPENSSL_SUPPORT"],
+    deps = ["@com_github_openssl_openssl//:openssl"],
 )

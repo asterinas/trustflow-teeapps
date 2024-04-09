@@ -22,12 +22,12 @@
 #include "spdlog/spdlog.h"
 #include "yacl/crypto/base/aead/gcm_crypto.h"
 #include "yacl/crypto/base/aead/sm4_mac.h"
-#include "yacl/crypto/base/asymmetric_rsa_crypto.h"
-#include "yacl/crypto/base/asymmetric_sm2_crypto.h"
-#include "yacl/crypto/base/asymmetric_util.h"
-#include "yacl/crypto/base/hmac_sha256.h"
-#include "yacl/crypto/base/rsa_signing.h"
-#include "yacl/crypto/base/symmetric_crypto.h"
+#include "yacl/crypto/base/block_cipher/symmetric_crypto.h"
+#include "yacl/crypto/base/hmac/hmac_sha256.h"
+#include "yacl/crypto/base/pke/asymmetric_crypto.h"
+#include "yacl/crypto/base/pke/asymmetric_rsa_crypto.h"
+#include "yacl/crypto/base/pke/asymmetric_sm2_crypto.h"
+#include "yacl/crypto/base/sign/rsa_signing.h"
 #include "yacl/crypto/utils/rand.h"
 
 #include "teeapps/utils/json2pb.h"
@@ -133,7 +133,9 @@ secretflowapis::v2::sdc::capsule_manager::EncryptedRequest GenEncryptedRequest(
   // gen content encryption key
   const auto cek = yacl::crypto::RandBytes(kContentKeyBytes);
   jwe.set_encrypted_key(cppcodec::base64_url_unpadded::encode(
-      yacl::crypto::RsaEncryptor::CreateFromX509(peer_cert)->Encrypt(cek)));
+      yacl::crypto::RsaEncryptor(
+          yacl::crypto::LoadX509CertPublicKeyFromBuf(peer_cert))
+          .Encrypt(cek)));
 
   const auto iv = yacl::crypto::RandBytes(kIvBytes);
   jwe.set_iv(cppcodec::base64_url_unpadded::encode(iv));
@@ -161,7 +163,8 @@ secretflowapis::v2::sdc::capsule_manager::EncryptedRequest GenEncryptedRequest(
     const std::string sign_input =
         jws.protected_header() + kJwsConcatDelimiter + jws.payload();
     const std::vector<uint8_t> sig =
-        yacl::crypto::RsaSigner::CreateFromPem(private_key)->Sign(sign_input);
+        yacl::crypto::RsaSigner(yacl::crypto::LoadPemKey(private_key))
+            .Sign(sign_input);
     jws.set_signature(cppcodec::base64_url_unpadded::encode(sig));
 
     // Jwe(jws)
@@ -214,8 +217,9 @@ std::tuple<secretflowapis::v2::Status, T> ParseEncryptedResponse(
   const auto tag = cppcodec::base64_url_unpadded::decode(jwe.tag());
   const auto aad = cppcodec::base64_url_unpadded::decode(jwe.aad());
 
-  const auto cek = yacl::crypto::RsaDecryptor::CreateFromPem(private_key)
-                       ->Decrypt(encrypted_key);
+  const auto cek =
+      yacl::crypto::RsaDecryptor(yacl::crypto::LoadPemKey(private_key))
+          .Decrypt(encrypted_key);
 
   std::vector<uint8_t> plain(cipher.size());
   yacl::crypto::Aes128GcmCrypto(cek, iv).Decrypt(cipher, aad, tag,

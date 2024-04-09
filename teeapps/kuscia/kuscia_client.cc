@@ -80,10 +80,11 @@ KusciaClient::QueryDomainData(const std::string& domain_data_id) const {
       domain_data_stub_->QueryDomainData(&context, request, &response);
   YACL_ENFORCE(status.ok(),
                "Calling QueryDomainData failed, error code: {}, message: {}",
-               status.error_code(), status.error_message());
+               static_cast<int>(status.error_code()), status.error_message());
   YACL_ENFORCE(response.status().code() == 0,
                "Call service failed, error code: {}, message: {}",
-               response.status().code(), response.status().message());
+               static_cast<int>(response.status().code()),
+               response.status().message());
 
   return response.data();
 }
@@ -106,10 +107,11 @@ KusciaClient::QueryDomainDataSource(const std::string& datasource_id) const {
   YACL_ENFORCE(
       status.ok(),
       "Calling QueryDomainDataSource failed, error code: {}, message: {}",
-      status.error_code(), status.error_message());
+      static_cast<int>(status.error_code()), status.error_message());
   YACL_ENFORCE(response.status().code() == 0,
                "Call service failed, error code: {}, message: {}",
-               response.status().code(), response.status().message());
+               static_cast<int>(response.status().code()),
+               response.status().message());
 
   return response.data();
 }
@@ -139,10 +141,11 @@ std::string KusciaClient::CreateDomainData(
 
   YACL_ENFORCE(status.ok(),
                "Calling CreateDomainData failed, error code: {}, message: {}",
-               status.error_code(), status.error_message());
+               static_cast<int>(status.error_code()), status.error_message());
   YACL_ENFORCE(response.status().code() == 0,
                "Call service failed, error code: {}, message: {}",
-               response.status().code(), response.status().message());
+               static_cast<int>(response.status().code()),
+               response.status().message());
   return response.data().domaindata_id();
 }
 

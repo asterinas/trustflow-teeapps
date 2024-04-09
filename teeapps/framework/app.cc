@@ -18,10 +18,9 @@
 
 #include "absl/strings/str_split.h"
 #include "cppcodec/base64_rfc4648.hpp"
-#include "rapidjson/prettywriter.h"
-#include "rapidjson/stringbuffer.h"
 #include "spdlog/spdlog.h"
 #include "yacl/crypto/base/hash/hash_utils.h"
+#include "yacl/crypto/base/key_utils.h"
 
 #include "teeapps/framework/constants.h"
 #include "teeapps/framework/subprocess.h"
@@ -39,7 +38,7 @@ namespace teeapps {
 namespace framework {
 
 namespace {
-const std::unordered_map<std::string, std::string> teeapps_subject_map = {
+const std::unordered_map<std::string, std::string> kTeeappsSubjectMap = {
     {"C", "CN"},       {"ST", "HZ"},         {"L", "HZ"},
     {"O", "AntGroup"}, {"OU", "SecretFlow"}, {"CN", "TeeApps"}};
 
@@ -47,20 +46,21 @@ constexpr uint8_t kKeyBytes = 32;
 constexpr uint32_t kRsaBitLength = 3072;
 constexpr uint32_t kCertDays = 365;
 
-constexpr char kTee[] = "tee";
-constexpr char kMrEnclave[] = "mr_enclave";
-constexpr char kMrSigner[] = "mr_signer";
-constexpr char kSgx[] = "sgx";
+// python path
+constexpr char kPyPath[] = "/home/teeapp/python/bin/python3";
+constexpr char kOcclumPyPath[] = "/bin/python3";
 
 std::string GenCmd(const std::string& component_name, const std::string& plat) {
   const auto py_name = teeapps::framework::comp_py_map.find(component_name);
   YACL_ENFORCE(py_name != teeapps::framework::comp_py_map.end(),
                "can not find py_name for {}", component_name);
-  if (plat == teeapps::framework::kPlatSim) {
-    return fmt::format("{},{}/{}", teeapps::framework::kSimPyPath,
-                       teeapps::framework::kSimPyBizPath, py_name->second);
+  if (plat == teeapps::framework::kPlatSim ||
+      plat == teeapps::framework::kPlatTdx ||
+      plat == teeapps::framework::kPlatCsv) {
+    return fmt::format("{},/home/teeapp/{}/teeapps/biz/{}", kPyPath, plat,
+                       py_name->second);
   } else if (plat == teeapps::framework::kPlatSgx) {
-    return fmt::format("/bin/python3,/{}", py_name->second);
+    return fmt::format("{},/{}", kOcclumPyPath, py_name->second);
   } else {
     YACL_THROW("plat {} not support", plat);
   }
@@ -69,10 +69,12 @@ std::string GenCmd(const std::string& component_name, const std::string& plat) {
 }  // namespace
 
 App::App(const std::string& plat, const std::string& app_mode,
-         const std::string& entrey_task_config_path,
+         const std::string& entry_task_config_path,
          const std::string& data_mesh_endpoint, const bool enable_capsule_tls) {
   YACL_ENFORCE(plat == teeapps::framework::kPlatSim ||
-                   plat == teeapps::framework::kPlatSgx,
+                   plat == teeapps::framework::kPlatSgx ||
+                   plat == teeapps::framework::kPlatTdx ||
+                   plat == teeapps::framework::kPlatCsv,
                "plat {} not support", plat);
   plat_ = plat;
   YACL_ENFORCE(app_mode == teeapps::framework::kAppModeKuscia ||
@@ -82,7 +84,7 @@ App::App(const std::string& plat, const std::string& app_mode,
   if (app_mode_ == teeapps::framework::kAppModeKuscia) {
     SPDLOG_INFO("Start parsing Kuscia Task Config...");
     const auto kuscia_task_config = teeapps::kuscia::KusciaTaskConfig(
-        entrey_task_config_path, data_mesh_endpoint);
+        entry_task_config_path, data_mesh_endpoint);
 
     node_eval_param_ = std::move(kuscia_task_config.node_eval_param());
     storage_config_ = std::move(kuscia_task_config.storage_config());
@@ -91,7 +93,7 @@ App::App(const std::string& plat, const std::string& app_mode,
   } else if (app_mode_ == teeapps::framework::kAppModeLocal) {
     SPDLOG_INFO("Start parsing Local Task Config...");
     const auto local_task_config =
-        teeapps::local::LocalTaskConfig(entrey_task_config_path);
+        teeapps::local::LocalTaskConfig(entry_task_config_path);
 
     node_eval_param_ = std::move(local_task_config.node_eval_param());
     tee_task_config_ = std::move(local_task_config.tee_task_config());
@@ -109,13 +111,23 @@ App::App(const std::string& plat, const std::string& app_mode,
       "can not find corresponding Component definition in COMP_DEF_LIST");
   component_def_ = comp_def->second;
 
-  auto [cert, private_key] = yacl::crypto::CreateRsaCertificateAndPrivateKey(
-      teeapps_subject_map, kRsaBitLength, kCertDays);
-  cert_ = std::move(cert);
-  private_key_ = std::move(private_key);
+  auto [pk_buf, sk_buf] = yacl::crypto::GenRsaKeyPairToPemBuf(kRsaBitLength);
+
+  auto pk = yacl::crypto::LoadKeyFromBuf(yacl::ByteContainerView(pk_buf));
+  auto sk = yacl::crypto::LoadKeyFromBuf(yacl::ByteContainerView(sk_buf));
+  auto cert = yacl::crypto::MakeX509Cert(pk, sk, kTeeappsSubjectMap, kCertDays,
+                                         yacl::crypto::HashAlgorithm::SHA256);
+  auto cert_buf = yacl::crypto::ExportX509CertToBuf(cert);
+
+  private_key_ = std::string(sk_buf.data<char>(), sk_buf.size());
+  cert_ = std::string(cert_buf.data<char>(), cert_buf.size());
+
+  SPDLOG_INFO("Gen teeapps private key and certificate success");
 
   capsule_manager_client_ = std::make_unique<CapsuleManagerClient>(
       tee_task_config_.capsule_manager_endpoint(), enable_capsule_tls);
+
+  SPDLOG_INFO("Create Capsule Manager Client success");
 }
 
 void App::Run() {
@@ -196,26 +208,6 @@ void App::GetInputDataKeys(
     }
   }
   // TODO add env and global attrs
-  if (plat_ != teeapps::framework::kPlatSim) {
-    std::string mr_signer, mr_enclave;
-    teeapps::utils::GetEnclaveInfo(mr_signer, mr_enclave);
-
-    rapidjson::StringBuffer env_json;
-    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(env_json);
-    writer.StartObject();
-    writer.String(kTee);
-    writer.StartObject();
-    writer.String(kSgx);
-    writer.StartObject();
-    writer.String(kMrSigner);
-    writer.String(mr_signer.c_str());
-    writer.String(kMrEnclave);
-    writer.String(mr_enclave.c_str());
-    writer.EndObject();
-    writer.EndObject();
-    writer.EndObject();
-    resource_request.set_env(env_json.GetString());
-  }
 
   SPDLOG_INFO("Try to get Ra Cert from Capsule Manager");
   capsule_manager_client_->GetRaCert();
@@ -233,7 +225,7 @@ void App::GetInputDataKeys(
 // download data, decrypt Data to data path
 void App::ProcessInput(
     const std::unordered_map<std::string, std::string>& data_keys_map) const {
-  std::filesystem::create_directories(teeapps::framework::kDirBase);
+  std::filesystem::create_directories(teeapps::framework::kTaskBaseDir);
   for (const auto& input : node_eval_param_.inputs()) {
     // data_path is the local path of decrypted input data(in TaskConfig of
     // teeapps)
@@ -400,9 +392,10 @@ void App::PostProcess() {
     // Step 1: encrypt output data
     const std::vector<uint8_t> data_key =
         yacl::crypto::RandBytes(kKeyBytes, true);
-    std::string _, output_id, output_uri;
+    std::string data_source_id, output_id, output_uri;
     if (app_mode_ == teeapps::framework::kAppModeKuscia) {
-      teeapps::utils::ParseDmOutputUri(uri, _, output_id, output_uri);
+      teeapps::utils::ParseDmOutputUri(uri, data_source_id, output_id,
+                                       output_uri);
     } else if (app_mode_ == teeapps::framework::kAppModeLocal) {
       teeapps::utils::ParseLocalOutputUri(uri, output_id, output_uri);
     } else {
@@ -417,11 +410,13 @@ void App::PostProcess() {
     body.set_scope(tee_task_config_.scope());
     for (const auto& input : node_eval_param_.inputs()) {
       for (const auto& data_ref : input.data_refs()) {
-        std::string input_id, _;
+        std::string input_id, input_uri;
         if (app_mode_ == teeapps::framework::kAppModeKuscia) {
-          teeapps::utils::ParseKusciaInputUri(data_ref.uri(), input_id, _);
+          teeapps::utils::ParseKusciaInputUri(data_ref.uri(), input_id,
+                                              input_uri);
         } else if (app_mode_ == teeapps::framework::kAppModeLocal) {
-          teeapps::utils::ParseLocalInputUri(data_ref.uri(), input_id, _);
+          teeapps::utils::ParseLocalInputUri(data_ref.uri(), input_id,
+                                             input_uri);
         } else {
           YACL_THROW("app mode {} not support", app_mode_);
         }

@@ -24,6 +24,5 @@ namespace utils {
 secretflowapis::v2::sdc::UnifiedAttestationReport GenRaReport(
     yacl::ByteContainerView user_data);
 
-void GetEnclaveInfo(std::string& mr_signer, std::string& mr_enclave);
 }  // namespace utils
 }  // namespace teeapps

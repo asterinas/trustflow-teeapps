@@ -50,7 +50,7 @@
         },
         "data_refs": [
           {
-            "uri": "file://input/?id=alice_uuid&&uri=/host/testdata/breast_cancer/alice.csv.enc"
+            "uri": "file://input/?id=breast_cancer_alice&&uri=/host/testdata/breast_cancer/alice.csv.enc"
           }
         ]
       },
@@ -90,7 +90,7 @@
         },
         "data_refs": [
           {
-            "uri": "file://input/?id=bob_uuid&&uri=/host/testdata/breast_cancer/bob.csv.enc"
+            "uri": "file://input/?id=breast_cancer_bob&&uri=/host/testdata/breast_cancer/bob.csv.enc"
           }
         ]
       }

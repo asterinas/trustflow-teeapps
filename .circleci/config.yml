@@ -31,6 +31,9 @@ parameters:
   GHA_Meta:
     type: string
     default: ""
+  GHA_Platform:
+    type: string
+    default: ""
   GHA_Version:
     type: string
     default: ""
@@ -72,31 +75,46 @@ jobs:
       - run:
           name: Build and Push Docker image
           command: |
-            SIM_VERSION=<< pipeline.parameters.GHA_Version >>
-            OCCLUM_VERSION=occlum29.05-<< pipeline.parameters.GHA_Version >>
-            echo "sim image version: ${SIM_VERSION}"
-            echo "occlum sgx2 image version: ${OCCLUM_VERSION}"
+            PLATFORM=<< pipeline.parameters.GHA_Platform >>
+            COMMON_VERSION=<< pipeline.parameters.GHA_Version >>
+            OCCLUM_VERSION=occlum0.30.1-<< pipeline.parameters.GHA_Version >>
 
             # login docker
             docker login -u secretflow -p ${DOCKER_DEPLOY_TOKEN}
 
-            # Build sim image
-            cd deployment/dev
-            bash ./build.sh -l -v ${SIM_VERSION}
-            cd ../..
-
-            # Push sim image
-            docker push secretflow/teeapps-sim-ubuntu20.04:${SIM_VERSION}
-            docker push secretflow/teeapps-sim-ubuntu20.04:latest
-
-            # Build occlum sgx2 image
-            cd deployment/prod
-            bash ./build.sh -l -v ${OCCLUM_VERSION}
-            cd ../..
-
-            # Push occlum sgx2 image
-            docker push secretflow/teeapps-sgx-ubuntu20.04:${OCCLUM_VERSION}
-            docker push secretflow/teeapps-sgx-ubuntu20.04:latest
+            case "$PLATFORM" in
+              sim)
+                echo "build and publish in sim mode, version: ${COMMON_VERSION}"
+                pushd deployment
+                bash build.sh -p sim -v ${COMMON_VERSION} -l -u
+                popd
+                ;;
+              sgx)
+                echo "build and publish in sgx mode, version: ${OCCLUM_VERSION}"
+                pushd deployment
+                bash build.sh -p sgx -v ${OCCLUM_VERSION} -l -u
+                popd
+                ;;
+              tdx)
+                echo "build and publish in tdx mode, version: ${COMMON_VERSION}"
+                pushd deployment
+                bash build.sh -p tdx -v ${COMMON_VERSION} -l -u
+                popd
+                ;;
+              csv)
+                echo "build and publish in csv mode, version: ${COMMON_VERSION}"
+                pushd deployment
+                bash build.sh -p csv -v ${COMMON_VERSION} -l -u
+                popd
+                ;;
+              all)
+                echo "build and publish all mode images, common version: ${COMMON_VERSION}, occlum version: ${OCCLUM_VERSION}"
+                ;;
+              *)
+                echo "Platform err, should be one of sim/sgx/tdx/csv/all, but got $PLATFORM"
+                exit 1
+                ;;
+            esac
 
 
 # Invoke jobs via workflows
@@ -111,7 +129,7 @@ workflows:
     when:
       and:
         - equal: ["docker_image_publish", << pipeline.parameters.GHA_Action >>]
+        - exits: << pipeline.parameters.GHA_Platform >>
         - exits: << pipeline.parameters.GHA_Version >>
     jobs:
       - docker_image_publish
-

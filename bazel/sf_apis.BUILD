@@ -26,3 +26,10 @@ proto_library(
         "@com_google_protobuf//:any_proto",
     ],
 )
+
+cc_proto_library(
+    name = "cc_sf_apis_proto",
+    deps = [
+        ":sf_apis_proto",
+    ],
+)

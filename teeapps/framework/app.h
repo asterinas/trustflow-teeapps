@@ -17,7 +17,6 @@
 #include <memory>
 
 #include "spdlog/spdlog.h"
-#include "yacl/crypto/base/asymmetric_util.h"
 
 #include "teeapps/component/component.h"
 #include "teeapps/component/eval_param_reader.h"

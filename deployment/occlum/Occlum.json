@@ -39,6 +39,12 @@
     },
     "pkru": 0
   },
+  "feature": {
+    "amx": 0,
+    "pkru": 0,
+    "enable_edmm": false,
+    "enable_posix_shm": false
+  },
   "mount": [
     {
       "target": "/",
