@@ -110,6 +110,12 @@ jobs:
                 ;;
               all)
                 echo "build and publish all mode images, common version: ${COMMON_VERSION}, occlum version: ${OCCLUM_VERSION}"
+                pushd deployment
+                bash build.sh -p sim -v ${COMMON_VERSION} -l -u
+                bash build.sh -p sgx -v ${OCCLUM_VERSION} -l -u
+                bash build.sh -p tdx -v ${COMMON_VERSION} -l -u
+                bash build.sh -p csv -v ${COMMON_VERSION} -l -u
+                popd
                 ;;
               *)
                 echo "Platform err, should be one of sim/sgx/tdx/csv/all, but got $PLATFORM"
