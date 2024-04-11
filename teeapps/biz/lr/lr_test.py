@@ -60,7 +60,6 @@ TEST_CONFIG_JSON = """
 TEST_OUTPUT_PATH = "output.pkl"
 
 
-
 class UnitTests(unittest.TestCase):
     def test_lr(self):
         # before

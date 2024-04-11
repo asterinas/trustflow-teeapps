@@ -54,9 +54,7 @@ def teeapps_cc_binary(
     cc_binary(
         linkopts = linkopts + ["-lm"],
         copts = copts + _teeapps_copts(),
-        deps = deps + [
-            "@com_github_gperftools_gperftools//:gperftools",
-        ],
+        deps = deps,
         **kargs
     )
 
@@ -66,7 +64,7 @@ def teeapps_cc_library(
         deps = [],
         **kargs):
     cc_library(
-        linkopts = linkopts,
+        linkopts = linkopts + ["-ldl"],
         copts = _teeapps_copts() + copts,
         deps = deps + [
             "@com_github_gabime_spdlog//:spdlog",
@@ -85,8 +83,6 @@ def teeapps_cc_test(
         linkopts = linkopts + ["-lm"],
         copts = _teeapps_copts() + copts,
         deps = deps + [
-            # use tcmalloc same as release bins. make them has same behavior on mem.
-            "@com_github_gperftools_gperftools//:gperftools",
             "@com_google_googletest//:gtest_main",
         ],
         # static link for tcmalloc

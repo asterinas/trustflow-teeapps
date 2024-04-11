@@ -15,7 +15,6 @@
 #include "teeapps/framework/capsule_manager_client.h"
 
 #include "cppcodec/base64_url_unpadded.hpp"
-#include "gflags/gflags.h"
 #include "spdlog/spdlog.h"
 #include "yacl/crypto/base/hash/hash_utils.h"
 #include "yacl/crypto/utils/rand.h"
@@ -27,10 +26,9 @@
 namespace teeapps {
 namespace framework {
 
-using namespace secretflowapis;
-using namespace secretflowapis::v2::sdc;
-
 namespace {
+namespace capsule_manager = ::secretflowapis::v2::sdc::capsule_manager;
+
 constexpr uint8_t kNonceBytes = 16;
 
 constexpr uint32_t kGrpcMaxMsgSizeMb = 1024;
@@ -40,11 +38,12 @@ constexpr char kClientCertPath[] = "/host/certs/client.crt";
 constexpr char kClientKeyPath[] = "/host/certs/client.key";
 constexpr char kCaCertPath[] = "/host/certs/ca.crt";
 
-inline void VerifySfResponseStatus(const v2::Status& status) {
-  YACL_ENFORCE(status.code() == v2::Code::OK,
+inline void VerifySfResponseStatus(const secretflowapis::v2::Status& status) {
+  YACL_ENFORCE(status.code() == secretflowapis::v2::Code::OK,
                "Call service failed, error code: {}, message: {}",
                status.code(), status.message());
 }
+
 }  // namespace
 
 CapsuleManagerClient::CapsuleManagerClient(
@@ -86,7 +85,7 @@ std::string CapsuleManagerClient::GetRaCert() {
       capsule_manager_stub_->GetRaCert(&context, request, &response);
   YACL_ENFORCE(status.ok(),
                "Calling GetRaCert failed, error code: {}, message: {}",
-               status.error_code(), status.error_message());
+               static_cast<int>(status.error_code()), status.error_message());
 
   VerifySfResponseStatus(response.status());
 
@@ -114,7 +113,7 @@ std::vector<capsule_manager::DataKey> CapsuleManagerClient::GetDataKeys(
 
     SPDLOG_INFO("Generating attestation report...");
     const std::string user_data = cert + "." + serialized_resource_req;
-    v2::sdc::UnifiedAttestationReport attestation_report =
+    secretflowapis::v2::sdc::UnifiedAttestationReport attestation_report =
         teeapps::utils::GenRaReport(user_data);
 
     *request.mutable_attestation_report() = std::move(attestation_report);
@@ -139,7 +138,7 @@ std::vector<capsule_manager::DataKey> CapsuleManagerClient::GetDataKeys(
       capsule_manager_stub_->GetDataKeys(&context, enc_req, &enc_res);
   YACL_ENFORCE(status.ok(),
                "Calling GetDataKeys failed, error code: {}, message: {}",
-               status.error_code(), status.error_message());
+               static_cast<int>(status.error_code()), status.error_message());
   auto [res_status, response] = teeapps::utils::ParseEncryptedResponse<
       capsule_manager::GetDataKeysResponse>(enc_res, private_key);
   VerifySfResponseStatus(res_status);
@@ -170,7 +169,7 @@ void CapsuleManagerClient::CreateDataKeys(
       capsule_manager_stub_->CreateDataKeys(&context, enc_req, &enc_res);
   YACL_ENFORCE(status.ok(),
                "Calling CreateDatakeys failed, error code: {}, message: {}",
-               status.error_code(), status.error_message());
+               static_cast<int>(status.error_code()), status.error_message());
   VerifySfResponseStatus(enc_res.status());
 }
 
@@ -197,7 +196,7 @@ void CapsuleManagerClient::CreateDataPolicy(
       capsule_manager_stub_->CreateDataPolicy(&context, enc_req, &enc_res);
   YACL_ENFORCE(status.ok(),
                "Calling CreateDataPolicy failed, error code: {}, message: {}",
-               status.error_code(), status.error_message());
+               static_cast<int>(status.error_code()), status.error_message());
   VerifySfResponseStatus(enc_res.status());
 }
 
@@ -219,7 +218,7 @@ void CapsuleManagerClient::CreateResultDataKey(
 
     SPDLOG_INFO("Generating attestation report...");
     const std::string user_data = serialized_body;
-    v2::sdc::UnifiedAttestationReport attestation_report =
+    secretflowapis::v2::sdc::UnifiedAttestationReport attestation_report =
         teeapps::utils::GenRaReport(user_data);
 
     *request.mutable_attestation_report() = std::move(attestation_report);
@@ -243,7 +242,7 @@ void CapsuleManagerClient::CreateResultDataKey(
   YACL_ENFORCE(
       status.ok(),
       "Calling CreateResultDataKey failed, error code: {}, message: {}",
-      status.error_code(), status.error_message());
+      static_cast<int>(status.error_code()), status.error_message());
   VerifySfResponseStatus(enc_res.status());
 }
 

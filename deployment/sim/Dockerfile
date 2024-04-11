@@ -12,20 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM secretflow/teeapps-gcc11-dev:0.1.0b0 as builder
-
+FROM secretflow/trustedflow-dev-ubuntu22.04:latest as builder
 
 WORKDIR /home/admin/dev
 
-COPY .bazelrc .bazelversion build.sh BUILD.bazel Occlum.json python.yaml WORKSPACE ./
+COPY .bazelrc .bazelversion BUILD.bazel WORKSPACE ./
 COPY teeapps ./teeapps
 COPY integration_test ./integration_test
 COPY bazel ./bazel
-COPY deployment/conf/unified_attestation.json ./deployment/conf/unified_attestation.json
+COPY scripts/build_sim.sh ./scripts/build_sim.sh
 
-RUN ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts && bash build.sh
+RUN ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+RUN bash ./scripts/build_sim.sh
 
-FROM secretflow/occlum:0.29.5-ubuntu20.04
+
+FROM ubuntu:22.04
 
 ARG config_templates=""
 LABEL kuscia.secretflow.config-templates=$config_templates
@@ -39,11 +40,12 @@ LABEL kuscia.secretflow.comp_list=$comp_list
 ARG translation=""
 LABEL kuscia.secretflow.translation=$translation
 
-COPY --from=builder /home/teeapp/occlum/occlum_instance /home/teeapp/occlum/occlum_instance
-COPY --from=builder /home/teeapp/python-occlum /home/teeapp/python-occlum
+COPY --from=builder /home/teeapp/sim/teeapps /home/teeapp/sim/teeapps
+COPY --from=builder /home/teeapp/python /home/teeapp/python
+COPY --from=builder /host/certs /host/certs
+COPY --from=builder /host/integration_test /host/integration_test
+COPY --from=builder /host/testdata /host/testdata
 
-ENV PATH /home/teeapp/python-occlum/bin:$PATH
+ENV PATH /home/teeapp/python/bin:$PATH
 
-RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
-
-WORKDIR /home/teeapp/occlum/occlum_instance
+WORKDIR /home/teeapp/sim/teeapps

@@ -19,7 +19,7 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 #include "yacl/base/exception.h"
-#include "yacl/crypto/base/rsa_signing.h"
+#include "yacl/crypto/base/sign/rsa_signing.h"
 
 #include "teeapps/utils/crypto_util.h"
 #include "teeapps/utils/io_util.h"
@@ -90,12 +90,12 @@ void LocalTaskConfig::SetFromJson(const std::string& local_task_config_json) {
   const auto signature =
       cppcodec::base64_rfc4648::decode(tee_task_config_.signature());
   if (tee_task_config_.sign_algorithm() == teeapps::utils::kRs256) {
-    yacl::crypto::RsaVerifier::CreateFromCertPem(
-        tee_task_config_.task_initiator_certs(0))
-        ->Verify(tee_task_config_.task_initiator_id() + kConcatDelimiter +
-                     tee_task_config_.scope() + kConcatDelimiter +
-                     tee_task_config_.task_body(),
-                 signature);
+    yacl::crypto::RsaVerifier(yacl::crypto::LoadX509CertPublicKeyFromBuf(
+                                  tee_task_config_.task_initiator_certs(0)))
+        .Verify(tee_task_config_.task_initiator_id() + kConcatDelimiter +
+                    tee_task_config_.scope() + kConcatDelimiter +
+                    tee_task_config_.task_body(),
+                signature);
   } else {
     YACL_THROW("sign_algorithm {} not support",
                tee_task_config_.sign_algorithm());

@@ -40,18 +40,16 @@ namespace framework {
 // plat
 constexpr char kPlatSim[] = "sim";
 constexpr char kPlatSgx[] = "sgx";
+constexpr char kPlatTdx[] = "tdx";
+constexpr char kPlatCsv[] = "csv";
 
 // app mode
 constexpr char kAppModeLocal[] = "local";
 constexpr char kAppModeKuscia[] = "kuscia";
 
 // task files path
-constexpr char kDirBase[] = "/home/teeapp/task";
+constexpr char kTaskBaseDir[] = "/home/teeapp/task";
 constexpr char kTaskConfigPath[] = "/home/teeapp/task/task_config.json";
-
-// sim cmd
-constexpr char kSimPyPath[] = "/home/teeapp/python/bin/python3";
-constexpr char kSimPyBizPath[] = "/home/teeapp/sim/teeapps/biz";
 
 // component domain
 constexpr char kPreProcessingDomain[] = "preprocessing";

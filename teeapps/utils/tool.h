@@ -30,7 +30,7 @@ class JsonProcess {
     rapidjson::ParseResult ok = doc_.Parse(json_str.c_str());
     YACL_ENFORCE(
         ok, "Catch Rapidjson error(code={}, offset={}) while parsing json={}",
-        ok.Code(), ok.Offset(), json_str);
+        static_cast<int>(ok.Code()), ok.Offset(), json_str);
   }
   // forbid
   JsonProcess(const JsonProcess& rhs) = delete;

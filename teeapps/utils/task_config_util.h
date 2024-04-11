@@ -24,21 +24,22 @@ namespace teeapps {
 namespace utils {
 
 inline std::string GenDataPath(const std::string& data_uri) {
-  return fmt::format("{}/{}.dat", teeapps::framework::kDirBase, data_uri);
+  return fmt::format("{}/{}.dat", teeapps::framework::kTaskBaseDir, data_uri);
 }
 
 inline std::string GenTmpEncDataPath(const std::string& data_uri) {
-  return fmt::format("{}/{}.encrypted.tmp", teeapps::framework::kDirBase,
+  return fmt::format("{}/{}.encrypted.tmp", teeapps::framework::kTaskBaseDir,
                      data_uri);
 }
 
 inline std::string GenTmpDecDataPath(const std::string& data_uri) {
-  return fmt::format("{}/{}.decrypted.tmp", teeapps::framework::kDirBase,
+  return fmt::format("{}/{}.decrypted.tmp", teeapps::framework::kTaskBaseDir,
                      data_uri);
 }
 
 inline std::string GenSchemaPath(const std::string& data_uri) {
-  return fmt::format("{}/{}.schema", teeapps::framework::kDirBase, data_uri);
+  return fmt::format("{}/{}.schema", teeapps::framework::kTaskBaseDir,
+                     data_uri);
 }
 
 void FillTaskConfigParams(

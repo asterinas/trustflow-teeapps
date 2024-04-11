@@ -23,7 +23,7 @@ teeapps_cc_library(
     deps = [
         "//teeapps/kuscia:kuscia_client",
         "//teeapps/proto:cc_kuscia_proto",
-        "//teeapps/proto:cc_sf_apis_proto",
+        "//teeapps/proto:cc_sf_apis_grpc",
         "//teeapps/proto:cc_sf_spec_proto",
         "//teeapps/utils:crypto_util",
         "//teeapps/utils:data_uri_util",

@@ -2,7 +2,7 @@
 TeeApps contain a general framework for developing TEE applications and various application implementations used in federated AI/BI.
 
 ## Features
-- TeeApps run on the Intel SGX Machine. It will be remote attested by [Capsule Manager](https://github.com/secretflow/capsule-manager) who holds the data keys corresponding to encrypted inputs.
+- TeeApps support different tee platforms: Intel SGX2, Intel TDX and Hygon Csv. It will be remote attested by [Capsule Manager](https://github.com/secretflow/capsule-manager) who holds the data keys corresponding to encrypted inputs. We also support simulation mode for users who do not have these tee environments.
 - TeeApps use secretflow component spec to define inputs, outputs and other attributes.
 
 ## Quick Start
@@ -37,7 +37,7 @@ docker pull secretflow/teeapps-sim-ubuntu20.04:latest
 docker run -it --name teeapps-sim --network=host secretflow/teeapps-sim-ubuntu20.04:latest bash
 ```
 
-2. Copy encrypted file into docker (on host machine)
+2. Copy encrypted file into docker (from host machine)
 ```sh
 docker cp alice.csv.enc teeapps-sim:/host/testdata/breast_cancer/
 
@@ -53,7 +53,7 @@ docker exec -it teeapps-sim bash
 
 cd /host/integration_test
 
-pip install -r requirement.txt
+pip install -r requirements.txt
 
 #  please replace params
 python3 convert.py --cert_path carol.crt --prikey_path carol.key --task_config_path psi.json --scope default --capsule_manager_endpoint 127.0.0.1:8888 --tee_task_config_path psi_task.json
@@ -91,14 +91,14 @@ python3 convert.py --cert_path carol.crt --prikey_path carol.key --task_config_p
 /home/teeapp/sim/teeapps/main --plat=sim --enable_console_logger=true --enable_capsule_tls=false --entry_task_config_path=/host/integration_test/train_test_split_task.json
 ```
 
-#### Production Mode
-1. Pull and run production docker
+#### SGX Mode(Occlum Mode)
+1. Pull and run sgx docker image
 ```sh
 docker pull secretflow/teeapps-sgx-ubuntu20.04:latest
 
 docker run -it --name teeapps-sgx --network=host -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision --privileged=true secretflow/teeapps-sgx-ubuntu20.04:latest bash
 ```
-2. Modify PCCS
+2. Modify PCCS config
 
 Set real PCCS URL and set use_secure_cert to false in /etc/sgx_default_qcnl.conf.
 
@@ -157,18 +157,9 @@ Set real PCCS URL and set use_secure_cert to false in /etc/sgx_default_qcnl.conf
 }
 ```
 
-Set real PCCS URL in /home/teeapp/occlum/occlum_instance/image/etc/kubetee/unified_attestation.json
+Copy /etc/sgx_default_qcnl.conf to occlum instance image
 ```
-{
-    "ua_ias_url": "",
-    "ua_ias_spid": "",
-    "ua_ias_apk_key": "",
-    "ua_dcap_lib_path": "",
-    "ua_dcap_pccs_url": "https://localhost:8081/sgx/certification/v3/",
-    "ua_uas_url": "",
-    "ua_uas_app_key": "",
-    "ua_uas_app_secret": ""
-}
+cp /etc/sgx_default_qcnl.conf /home/teeapp/occlum/occlum_instance/image/etc/
 ```
 
 3. Build
@@ -203,7 +194,7 @@ docker exec -it teeapps-sgx bash
 
 cd /home/teeapp/occlum/occlum_instance/integration_test/
 
-pip install -r requirement.txt
+pip install -r requirements.txt
 
 #  please replace params
 python3 convert.py --cert_path carol.crt --prikey_path carol.key --task_config_path psi.json --scope default --capsule_manager_endpoint 127.0.0.1:8888 --tee_task_config_path psi_task.json
@@ -213,7 +204,7 @@ python3 convert.py --cert_path carol.crt --prikey_path carol.key --task_config_p
 ```sh
 cd /home/teeapp/occlum/occlum_instance
 
-occlum run /bin/main --enable_capsule_tls=false --entry_task_config_path=/host/integration_test/psi_task.json
+occlum run /bin/main --plat=sgx --enable_console_logger=true --enable_capsule_tls=false --entry_task_config_path=/host/integration_test/psi_task.json
 ```
 
 7. Check PSI output or run other applications
@@ -224,6 +215,104 @@ You can get data keys and decrypt /home/teeapp/occlum/occlum_instance/testdata/b
 
 You can also modify task configs or write a new task config by yourself to run other applications with encrypted join_table.
 
+#### TDX Mode
+1. Pull and run tdx docker image in a Intel trusted domain(TD VM)
+```sh
+docker pull secretflow/teeapps-tdx-ubuntu22.04:latest
+
+docker run -it --name teeapps-tdx --network=host -v /dev/tdx_guest:/dev/tdx_guest --privileged=true secretflow/teeapps-tdx-ubuntu22.04:latest bash
+```
+
+2. Modify PCCS config
+Set real PCCS URL and set use_secure_cert to false in /etc/sgx_default_qcnl.conf. This step is the same as in SGX mode.
+
+3. Copy encrypted file into docker (from host machine)
+```sh
+docker cp alice.csv.enc teeapps-tdx:/host/testdata/breast_cancer/
+
+docker cp bob.csv.enc teeapps-tdx:/host/testdata/breast_cancer/
+```
+
+4. Generate PSI task config. Suppose carol has access to alice.csv and bob.csv.
+```sh
+docker cp carol.key teeapps-tdx:/host/integration_test/
+
+docker cp carol.crt teeapps-tdx:/host/integration_test/
+
+docker exec -it teeapps-tdx bash
+
+cd /host/integration_test
+
+pip install -r requirements.txt
+
+#  please replace params
+python3 convert.py --cert_path carol.crt --prikey_path carol.key --task_config_path psi.json --scope default --capsule_manager_endpoint 127.0.0.1:8888 --tee_task_config_path psi_task.json
+```
+
+5. Run PSI
+```sh
+/home/teeapp/tdx/teeapps/main --plat=tdx --enable_console_logger=true --enable_capsule_tls=false --entry_task_config_path=/host/integration_test/psi_task.json
+```
+
+6. Check outputs or run other applications
+Same as in simulation mode
+
+#### CSV Mode
+1. Make and install csv-guest driver if your CSV VM does not have /dev/csv-guest
+
+Download https://gitee.com/anolis/hygon-devkit/blob/master/csv/attestation/csv-guest.c and compile with following Makefile:
+```makefile
+obj-m += csv-guest.o
+
+all:
+        make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+
+clean:
+        make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+```
+
+Install this module
+```sh
+insmod csv-guest.ko
+```
+
+2. Pull and run tdx docker image in your Hygon CSV VM
+```sh
+docker pull secretflow/teeapps-csv-ubuntu22.04:latest
+
+docker run -it --name teeapps-csv --network=host -v /dev/csv-guest:/dev/csv-guest --privileged=true secretflow/teeapps-csv-ubuntu22.04:latest bash
+```
+
+3. Copy encrypted file into docker (from host machine)
+```sh
+docker cp alice.csv.enc teeapps-csv:/host/testdata/breast_cancer/
+
+docker cp bob.csv.enc teeapps-csv:/host/testdata/breast_cancer/
+```
+
+3. Generate PSI task config. Suppose carol has access to alice.csv and bob.csv.
+```sh
+docker cp carol.key teeapps-csv:/host/integration_test/
+
+docker cp carol.crt teeapps-csv:/host/integration_test/
+
+docker exec -it teeapps-csv bash
+
+cd /host/integration_test
+
+pip install -r requirements.txt
+
+#  please replace params
+python3 convert.py --cert_path carol.crt --prikey_path carol.key --task_config_path psi.json --scope default --capsule_manager_endpoint 127.0.0.1:8888 --tee_task_config_path psi_task.json
+```
+
+4. Run PSI
+```sh
+/home/teeapp/csv/teeapps/main --plat=csv --enable_console_logger=true --enable_capsule_tls=false --entry_task_config_path=/host/integration_test/psi_task.json
+```
+
+5. Check outputs or run other applications
+Same as in simulation mode
 
 ## Build By Source code
 
@@ -238,29 +327,22 @@ bash env.sh enter
 
 ### Simulation Mode
 ```sh
-bash build_sim.sh
+bash scripts/build_sim.sh
 ```
 
-### Production Mode
-1. Build source code
+### SGX Mode(Occlum Mode)
 ```sh
-bash build.sh
+bash scripts/build_occlum.sh
 ```
-2. Set real PCCS URL and use_secure_cert in /etc/sgx_default_qcnl.conf
 
-3. Set real PCCS URL in /home/teeapp/occlum/occlum_instance/image/etc/kubetee/unified_attestation.json
-
-4. Generate a pair of asymmetric key
+### TDX Mode
 ```sh
-openssl genrsa -3 -out private_key.pem 3072
-
-openssl rsa -in private_key.pem -pubout -out public_key.pem
+bash scripts/build_tdx.sh
 ```
-5. Build occlum with your private key
-```sh
-cd /home/teeapp/occlum/occlum_instance
 
-occlum build -f --sign-key /path/to/private_key.pem
+### CSV Mode
+```sh
+bash scripts/build_csv.sh
 ```
 
 ## Support mTLS
@@ -282,10 +364,10 @@ docker cp client.key teeapps-sim:/host/certs/client.key
 
 python3 convert.py --cert_path carol.crt --prikey_path carol.key --task_config_path psi.json --scope default --capsule_manager_endpoint capsule-manager:8888 --tee_task_config_path psi_task.json
 
-/home/teeapp/sim/teeapps/main --plat=sim --enable_capsule_tls=true --entry_task_config_path=/host/integration_test/psi_task.json
+/home/teeapp/sim/teeapps/main --plat=sim --enable_console_logger=true --enable_capsule_tls=true --entry_task_config_path=/host/integration_test/psi_task.json
 ```
 
-### Production Mode
+### SGX Mode (Occlum Mode)
 ```sh
 docker cp ca.crt teeapps-sgx:/home/teeapp/occlum/occlum_instance/certs/ca.crt
 
@@ -295,5 +377,33 @@ docker cp client.key teeapps-sgx:/home/teeapp/occlum/occlum_instance/certs/clien
 
 python3 convert.py --cert_path carol.crt --prikey_path carol.key --task_config_path psi.json --scope default --capsule_manager_endpoint capsule-manager:8888 --tee_task_config_path psi_task.json
 
-occlum run /bin/main --enable_capsule_tls=true --entry_task_config_path=/host/integration_test/psi_task.json
+occlum run /bin/main --plat=sgx --enable_console_logger=true --enable_capsule_tls=true --entry_task_config_path=/host/integration_test/psi_task.json
+```
+
+
+### TDX Mode
+```sh
+docker cp ca.crt teeapps-tdx:/host/certs/ca.crt
+
+docker cp client.crt teeapps-tdx:/host/certs/client.crt
+
+docker cp client.key teeapps-tdx:/host/certs/client.key
+
+python3 convert.py --cert_path carol.crt --prikey_path carol.key --task_config_path psi.json --scope default --capsule_manager_endpoint capsule-manager:8888 --tee_task_config_path psi_task.json
+
+/home/teeapp/tdx/teeapps/main --plat=tdx --enable_console_logger=true --enable_capsule_tls=true --entry_task_config_path=/host/integration_test/psi_task.json
+```
+
+
+### CSV Mode
+```sh
+docker cp ca.crt teeapps-csv:/host/certs/ca.crt
+
+docker cp client.crt teeapps-csv:/host/certs/client.crt
+
+docker cp client.key teeapps-csv:/host/certs/client.key
+
+python3 convert.py --cert_path carol.crt --prikey_path carol.key --task_config_path psi.json --scope default --capsule_manager_endpoint capsule-manager:8888 --tee_task_config_path psi_task.json
+
+/home/teeapp/csv/teeapps/main --plat=csv --enable_console_logger=true --enable_capsule_tls=true --entry_task_config_path=/host/integration_test/psi_task.json
 ```

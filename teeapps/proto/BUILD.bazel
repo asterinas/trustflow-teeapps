@@ -19,7 +19,7 @@ load("@rules_proto_grpc//cpp:defs.bzl", "cpp_grpc_library")
 package(default_visibility = ["//visibility:public"])
 
 cpp_grpc_library(
-    name = "cc_sf_apis_proto",
+    name = "cc_sf_apis_grpc",
     deps = ["@sf_apis//:sf_apis_proto"],
 )
 
