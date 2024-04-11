@@ -22,7 +22,6 @@ COPY integration_test ./integration_test
 COPY bazel ./bazel
 COPY scripts/build_csv.sh ./scripts/build_csv.sh
 
-RUN ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
 RUN bash ./scripts/build_csv.sh
 
 FROM secretflow/trustedflow-release-ubuntu22.04:latest

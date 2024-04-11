@@ -25,7 +25,6 @@ COPY deployment/occlum/Occlum.json ./deployment/occlum/Occlum.json
 COPY deployment/occlum/python.yaml ./deployment/occlum/python.yaml
 COPY scripts/build_occlum.sh ./scripts/build_occlum.sh
 
-RUN ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
 RUN bash ./scripts/build_occlum.sh
 
 FROM secretflow/trustedflow-release-occlum-ubuntu22.04:latest
