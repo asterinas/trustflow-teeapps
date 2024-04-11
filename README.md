@@ -32,9 +32,9 @@ We suppose you have prepared dataset and got encrypted files: alice.csv.enc, bob
 #### Simulation Mode
 1. Pull and run simulation docker
 ```sh
-docker pull secretflow/teeapps-sim-ubuntu20.04:latest
+docker pull secretflow/teeapps-sim-ubuntu22.04:latest
 
-docker run -it --name teeapps-sim --network=host secretflow/teeapps-sim-ubuntu20.04:latest bash
+docker run -it --name teeapps-sim --network=host secretflow/teeapps-sim-ubuntu22.04:latest bash
 ```
 
 2. Copy encrypted file into docker (from host machine)
@@ -94,9 +94,9 @@ python3 convert.py --cert_path carol.crt --prikey_path carol.key --task_config_p
 #### SGX Mode(Occlum Mode)
 1. Pull and run sgx docker image
 ```sh
-docker pull secretflow/teeapps-sgx-ubuntu20.04:latest
+docker pull secretflow/teeapps-sgx-ubuntu22.04:latest
 
-docker run -it --name teeapps-sgx --network=host -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision --privileged=true secretflow/teeapps-sgx-ubuntu20.04:latest bash
+docker run -it --name teeapps-sgx --network=host -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision --privileged=true secretflow/teeapps-sgx-ubuntu22.04:latest bash
 ```
 2. Modify PCCS config
 
@@ -276,7 +276,7 @@ Install this module
 insmod csv-guest.ko
 ```
 
-2. Pull and run tdx docker image in your Hygon CSV VM
+2. Pull and run csv docker image in your Hygon CSV VM
 ```sh
 docker pull secretflow/teeapps-csv-ubuntu22.04:latest
 
