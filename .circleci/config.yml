@@ -45,7 +45,7 @@ jobs:
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
     docker:
-      - image: secretflow/ubuntu-base-ci:latest
+      - image: secretflow/trustedflow-dev-ubuntu22.04:latest
     resource_class: 2xlarge+
     shell: /bin/bash --login -eo pipefail
     # Add steps to the job
@@ -69,6 +69,7 @@ jobs:
   docker_image_publish:
     docker:
       - image: cimg/deploy:2023.06.1
+    resource_class: 2xlarge+
     steps:
       - checkout
       - setup_remote_docker
@@ -109,6 +110,12 @@ jobs:
                 ;;
               all)
                 echo "build and publish all mode images, common version: ${COMMON_VERSION}, occlum version: ${OCCLUM_VERSION}"
+                pushd deployment
+                bash build.sh -p sim -v ${COMMON_VERSION} -l -u
+                bash build.sh -p sgx -v ${OCCLUM_VERSION} -l -u
+                bash build.sh -p tdx -v ${COMMON_VERSION} -l -u
+                bash build.sh -p csv -v ${COMMON_VERSION} -l -u
+                popd
                 ;;
               *)
                 echo "Platform err, should be one of sim/sgx/tdx/csv/all, but got $PLATFORM"

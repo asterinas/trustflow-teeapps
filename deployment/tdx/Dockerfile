@@ -22,7 +22,6 @@ COPY integration_test ./integration_test
 COPY bazel ./bazel
 COPY scripts/build_tdx.sh ./scripts/build_tdx.sh
 
-RUN ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
 RUN bash ./scripts/build_tdx.sh
 
 
