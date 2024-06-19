@@ -4,253 +4,8 @@
     "version": "0.0.1",
     "comps": [
         {
-            "domain": "preprocessing",
-            "name": "psi",
-            "desc": "PSI between two parties.",
-            "version": "0.0.1",
-            "inputs": [
-                {
-                    "name": "input1",
-                    "desc": "Individual table for party 1",
-                    "types": [
-                        "sf.table.individual"
-                    ],
-                    "attrs": [
-                        {
-                            "name": "key",
-                            "desc": "Column(s) used to join.",
-                            "col_min_cnt_inclusive": "1"
-                        }
-                    ]
-                },
-                {
-                    "name": "input2",
-                    "desc": "Individual table for party 2",
-                    "types": [
-                        "sf.table.individual"
-                    ],
-                    "attrs": [
-                        {
-                            "name": "key",
-                            "desc": "Column(s) used to join.",
-                            "col_min_cnt_inclusive": "1"
-                        }
-                    ]
-                }
-            ],
-            "outputs": [
-                {
-                    "name": "psi_output",
-                    "desc": "Output table",
-                    "types": [
-                        "sf.table.individual"
-                    ]
-                }
-            ]
-        },
-        {
-            "domain": "preprocessing",
-            "name": "feature_filter",
-            "desc": "Drop features from the dataset.",
-            "version": "0.0.1",
-            "inputs": [
-                {
-                    "name": "in_ds",
-                    "desc": "Input table.",
-                    "types": [
-                        "sf.table.individual"
-                    ],
-                    "attrs": [
-                        {
-                            "name": "drop_features",
-                            "desc": "Features to drop.",
-                            "col_min_cnt_inclusive": "1"
-                        }
-                    ]
-                }
-            ],
-            "outputs": [
-                {
-                    "name": "out_ds",
-                    "desc": "Output table.",
-                    "types": [
-                        "sf.table.individual"
-                    ]
-                }
-            ]
-        },
-        {
-            "domain": "preprocessing",
-            "name": "train_test_split",
-            "desc": "Split datasets into random train and test subsets.\n- Please check: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html",
-            "version": "0.0.1",
-            "attrs": [
-                {
-                    "name": "train_size",
-                    "desc": "Proportion of the dataset to include in the train subset.",
-                    "type": "AT_FLOAT",
-                    "atomic": {
-                        "is_optional": true,
-                        "default_value": {
-                            "f": 0.75
-                        },
-                        "lower_bound_enabled": true,
-                        "lower_bound": {},
-                        "upper_bound_enabled": true,
-                        "upper_bound": {
-                            "f": 1
-                        }
-                    }
-                },
-                {
-                    "name": "fix_random",
-                    "desc": "Whether to fix random.",
-                    "type": "AT_BOOL",
-                    "atomic": {
-                        "is_optional": true,
-                        "default_value": {
-                            "b": true
-                        }
-                    }
-                },
-                {
-                    "name": "random_state",
-                    "desc": "Specify the random seed of the shuffling.",
-                    "type": "AT_INT",
-                    "atomic": {
-                        "is_optional": true,
-                        "default_value": {
-                            "i64": "1024"
-                        },
-                        "lower_bound_enabled": true,
-                        "lower_bound": {}
-                    }
-                },
-                {
-                    "name": "shuffle",
-                    "desc": "Whether to shuffle the data before splitting.",
-                    "type": "AT_BOOL",
-                    "atomic": {
-                        "is_optional": true,
-                        "default_value": {
-                            "b": true
-                        }
-                    }
-                }
-            ],
-            "inputs": [
-                {
-                    "name": "input_data",
-                    "desc": "Input table.",
-                    "types": [
-                        "sf.table.individual"
-                    ]
-                }
-            ],
-            "outputs": [
-                {
-                    "name": "train",
-                    "desc": "Output train dataset.",
-                    "types": [
-                        "sf.table.individual"
-                    ]
-                },
-                {
-                    "name": "test",
-                    "desc": "Output test dataset.",
-                    "types": [
-                        "sf.table.individual"
-                    ]
-                }
-            ]
-        },
-        {
-            "domain": "stats",
-            "name": "pearsonr",
-            "desc": "Calculate Pearson's product-moment correlation coefficient for individual dataset.",
-            "version": "0.0.1",
-            "inputs": [
-                {
-                    "name": "input_data",
-                    "desc": "Input table.",
-                    "types": [
-                        "sf.table.individual"
-                    ],
-                    "attrs": [
-                        {
-                            "name": "feature_selects",
-                            "desc": "Specify which features to calculate correlation coefficient with. If empty, all features will be used"
-                        }
-                    ]
-                }
-            ],
-            "outputs": [
-                {
-                    "name": "report",
-                    "desc": "Output Pearson's product-moment correlation coefficient report.",
-                    "types": [
-                        "sf.report"
-                    ]
-                }
-            ]
-        },
-        {
-            "domain": "stats",
-            "name": "table_statistics",
-            "desc": "Get a table of statistics,\nincluding each column's\n1. datatype\n2. total_count\n3. count\n4. count_na\n5. na_ratio\n6. min\n7. max\n8. mean\n9. var\n10. std\n11. sem\n12. skewness\n13. kurtosis\n14. q1\n15. q2\n16. q3\n17. moment_2\n18. moment_3\n19. moment_4\n20. central_moment_2\n21. central_moment_3\n22. central_moment_4\n23. sum\n24. sum_2\n25. sum_3\n26. sum_4\n- moment_2 means E[X^2].\n- central_moment_2 means E[(X - mean(X))^2].\n- sum_2 means sum(X^2).",
-            "version": "0.0.1",
-            "inputs": [
-                {
-                    "name": "input_data",
-                    "desc": "Input table.",
-                    "types": [
-                        "sf.table.individual"
-                    ]
-                }
-            ],
-            "outputs": [
-                {
-                    "name": "report",
-                    "desc": "Output table statistics report.",
-                    "types": [
-                        "sf.report"
-                    ]
-                }
-            ]
-        },
-        {
-            "domain": "stats",
-            "name": "vif",
-            "desc": "Calculate Variance Inflation Factor(VIF) for individual dataset",
-            "version": "0.0.1",
-            "inputs": [
-                {
-                    "name": "input_data",
-                    "desc": "Input table.",
-                    "types": [
-                        "sf.table.individual"
-                    ],
-                    "attrs": [
-                        {
-                            "name": "feature_selects",
-                            "desc": "Specify which features to calculate VIF with. If empty, all features will be used."
-                        }
-                    ]
-                }
-            ],
-            "outputs": [
-                {
-                    "name": "report",
-                    "desc": "Output Variance Inflation Factor(VIF) report.",
-                    "types": [
-                        "sf.report"
-                    ]
-                }
-            ]
-        },
-        {
             "domain": "feature",
-            "name": "vert_woe_binning",
+            "name": "woe_binning",
             "desc": "Generate Weight of Evidence (WOE) binning rules for individual datasets.",
             "version": "0.0.1",
             "attrs": [
@@ -330,7 +85,7 @@
         },
         {
             "domain": "feature",
-            "name": "vert_woe_substitution",
+            "name": "woe_substitution",
             "desc": "Substitute datasets' value by WOE substitution rules.",
             "version": "0.0.1",
             "inputs": [
@@ -522,8 +277,8 @@
         },
         {
             "domain": "ml.predict",
-            "name": "xgb_predict",
-            "desc": "Predict using the XGB model.",
+            "name": "lgbm_predict",
+            "desc": "Predict using the lgbm model.",
             "version": "0.0.1",
             "attrs": [
                 {
@@ -611,7 +366,7 @@
                     "name": "model",
                     "desc": "Input model.",
                     "types": [
-                        "sf.model.xgb"
+                        "sf.model.lgbm"
                     ]
                 }
             ],
@@ -726,6 +481,374 @@
                     "desc": "Output prediction.",
                     "types": [
                         "sf.table.individual"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "ml.predict",
+            "name": "xgb_predict",
+            "desc": "Predict using the XGB model.",
+            "version": "0.0.1",
+            "attrs": [
+                {
+                    "name": "pred_name",
+                    "desc": "Column name for predictions.",
+                    "type": "AT_STRING",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "s": "pred"
+                        }
+                    }
+                },
+                {
+                    "name": "save_label",
+                    "desc": "Whether or not to save real label column into output pred table. If true, input feature_dataset must contain label column.",
+                    "type": "AT_BOOL",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {}
+                    }
+                },
+                {
+                    "name": "label_name",
+                    "desc": "Column name for label.",
+                    "type": "AT_STRING",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "s": "label"
+                        }
+                    }
+                },
+                {
+                    "name": "save_id",
+                    "desc": "Whether to save id column into output pred table. If true, input feature_dataset must contain id column.",
+                    "type": "AT_BOOL",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {}
+                    }
+                },
+                {
+                    "name": "id_name",
+                    "desc": "Column name for id.",
+                    "type": "AT_STRING",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "s": "id"
+                        }
+                    }
+                },
+                {
+                    "name": "col_names",
+                    "desc": "Extra column names into output pred table.",
+                    "type": "AT_STRINGS",
+                    "atomic": {
+                        "list_max_length_inclusive": "-1",
+                        "is_optional": true
+                    }
+                }
+            ],
+            "inputs": [
+                {
+                    "name": "feature_dataset",
+                    "desc": "Input feature dataset.",
+                    "types": [
+                        "sf.table.individual"
+                    ],
+                    "attrs": [
+                        {
+                            "name": "ids",
+                            "desc": "Id columns.",
+                            "col_max_cnt_inclusive": "1"
+                        },
+                        {
+                            "name": "label",
+                            "desc": "Label column.",
+                            "col_max_cnt_inclusive": "1"
+                        }
+                    ]
+                },
+                {
+                    "name": "model",
+                    "desc": "Input model.",
+                    "types": [
+                        "sf.model.xgb"
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "pred",
+                    "desc": "Output prediction.",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "ml.train",
+            "name": "lgbm_train",
+            "desc": "LightGBM train component for individual dataset.",
+            "version": "0.0.1",
+            "attrs": [
+                {
+                    "name": "n_estimators",
+                    "desc": "Number of boosted trees to fit.",
+                    "type": "AT_INT",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "i64": "10"
+                        },
+                        "lower_bound_enabled": true,
+                        "lower_bound": {
+                            "i64": "1"
+                        },
+                        "lower_bound_inclusive": true,
+                        "upper_bound_enabled": true,
+                        "upper_bound": {
+                            "i64": "1024"
+                        },
+                        "upper_bound_inclusive": true
+                    }
+                },
+                {
+                    "name": "objective",
+                    "desc": "Specify the learning objective.",
+                    "type": "AT_STRING",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "s": "binary"
+                        },
+                        "allowed_values": {
+                            "ss": [
+                                "regression",
+                                "binary"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "boosting_type",
+                    "desc": "Boosting type.",
+                    "type": "AT_STRING",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "s": "gbdt"
+                        },
+                        "allowed_values": {
+                            "ss": [
+                                "gbdt",
+                                "rf",
+                                "dart"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "learning_rate",
+                    "desc": "Learning rate.",
+                    "type": "AT_FLOAT",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "f": 0.1
+                        },
+                        "lower_bound_enabled": true,
+                        "lower_bound": {},
+                        "upper_bound_enabled": true,
+                        "upper_bound": {
+                            "f": 1
+                        },
+                        "upper_bound_inclusive": true
+                    }
+                },
+                {
+                    "name": "num_leaves",
+                    "desc": "Max number of leaves in one tree.",
+                    "type": "AT_INT",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "i64": "31"
+                        },
+                        "lower_bound_enabled": true,
+                        "lower_bound": {
+                            "i64": "2"
+                        },
+                        "lower_bound_inclusive": true,
+                        "upper_bound_enabled": true,
+                        "upper_bound": {
+                            "i64": "1024"
+                        },
+                        "upper_bound_inclusive": true
+                    }
+                }
+            ],
+            "inputs": [
+                {
+                    "name": "train_dataset",
+                    "desc": "Input table.",
+                    "types": [
+                        "sf.table.individual"
+                    ],
+                    "attrs": [
+                        {
+                            "name": "ids",
+                            "desc": "Id columns will not be trained."
+                        },
+                        {
+                            "name": "label",
+                            "desc": "Label column.",
+                            "col_min_cnt_inclusive": "1",
+                            "col_max_cnt_inclusive": "1"
+                        }
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "output_model",
+                    "desc": "Output model.",
+                    "types": [
+                        "sf.model.lgbm"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "ml.train",
+            "name": "lr_train",
+            "desc": "linear or logistic regression training.",
+            "version": "0.0.1",
+            "attrs": [
+                {
+                    "name": "max_iter",
+                    "desc": "Maximum number of iterations taken for the solvers to converge.",
+                    "type": "AT_INT",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "i64": "10"
+                        },
+                        "lower_bound_enabled": true,
+                        "lower_bound": {
+                            "i64": "1"
+                        },
+                        "lower_bound_inclusive": true,
+                        "upper_bound_enabled": true,
+                        "upper_bound": {
+                            "i64": "10000"
+                        },
+                        "upper_bound_inclusive": true
+                    }
+                },
+                {
+                    "name": "reg_type",
+                    "desc": "Regression type",
+                    "type": "AT_STRING",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "s": "logistic"
+                        },
+                        "allowed_values": {
+                            "ss": [
+                                "linear",
+                                "logistic"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "l2_norm",
+                    "desc": "L2 regularization term.",
+                    "type": "AT_FLOAT",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "f": 1
+                        },
+                        "lower_bound_enabled": true,
+                        "lower_bound": {},
+                        "lower_bound_inclusive": true,
+                        "upper_bound_enabled": true,
+                        "upper_bound": {
+                            "f": 10000
+                        }
+                    }
+                },
+                {
+                    "name": "tol",
+                    "desc": "Tolerance for stopping criteria.",
+                    "type": "AT_FLOAT",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "f": 0.0001
+                        },
+                        "lower_bound_enabled": true,
+                        "lower_bound": {},
+                        "upper_bound_enabled": true,
+                        "upper_bound": {
+                            "f": 1
+                        }
+                    }
+                },
+                {
+                    "name": "penalty",
+                    "desc": "The penalty(aka regularization term) to be used.",
+                    "type": "AT_STRING",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "s": "l2"
+                        },
+                        "allowed_values": {
+                            "ss": [
+                                "l1",
+                                "l2",
+                                "elasticnet",
+                                "None"
+                            ]
+                        }
+                    }
+                }
+            ],
+            "inputs": [
+                {
+                    "name": "train_dataset",
+                    "desc": "Input train dataset.",
+                    "types": [
+                        "sf.table.individual"
+                    ],
+                    "attrs": [
+                        {
+                            "name": "ids",
+                            "desc": "Id columns will not be trained."
+                        },
+                        {
+                            "name": "label",
+                            "desc": "Label column.",
+                            "col_min_cnt_inclusive": "1",
+                            "col_max_cnt_inclusive": "1"
+                        }
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "output_model",
+                    "desc": "Output model.",
+                    "types": [
+                        "sf.model.lr"
                     ]
                 }
             ]
@@ -1056,131 +1179,246 @@
             ]
         },
         {
-            "domain": "ml.train",
-            "name": "lr_train",
-            "desc": "linear or logistic regression training.",
+            "domain": "preprocessing",
+            "name": "feature_filter",
+            "desc": "Drop features from the dataset.",
             "version": "0.0.1",
-            "attrs": [
-                {
-                    "name": "max_iter",
-                    "desc": "Maximum number of iterations taken for the solvers to converge.",
-                    "type": "AT_INT",
-                    "atomic": {
-                        "is_optional": true,
-                        "default_value": {
-                            "i64": "10"
-                        },
-                        "lower_bound_enabled": true,
-                        "lower_bound": {
-                            "i64": "1"
-                        },
-                        "lower_bound_inclusive": true,
-                        "upper_bound_enabled": true,
-                        "upper_bound": {
-                            "i64": "10000"
-                        },
-                        "upper_bound_inclusive": true
-                    }
-                },
-                {
-                    "name": "reg_type",
-                    "desc": "Regression type",
-                    "type": "AT_STRING",
-                    "atomic": {
-                        "is_optional": true,
-                        "default_value": {
-                            "s": "logistic"
-                        },
-                        "allowed_values": {
-                            "ss": [
-                                "linear",
-                                "logistic"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "l2_norm",
-                    "desc": "L2 regularization term.",
-                    "type": "AT_FLOAT",
-                    "atomic": {
-                        "is_optional": true,
-                        "default_value": {
-                            "f": 1
-                        },
-                        "lower_bound_enabled": true,
-                        "lower_bound": {},
-                        "lower_bound_inclusive": true,
-                        "upper_bound_enabled": true,
-                        "upper_bound": {
-                            "f": 10000
-                        }
-                    }
-                },
-                {
-                    "name": "tol",
-                    "desc": "Tolerance for stopping criteria.",
-                    "type": "AT_FLOAT",
-                    "atomic": {
-                        "is_optional": true,
-                        "default_value": {
-                            "f": 0.0001
-                        },
-                        "lower_bound_enabled": true,
-                        "lower_bound": {},
-                        "upper_bound_enabled": true,
-                        "upper_bound": {
-                            "f": 1
-                        }
-                    }
-                },
-                {
-                    "name": "penalty",
-                    "desc": "The penalty(aka regularization term) to be used.",
-                    "type": "AT_STRING",
-                    "atomic": {
-                        "is_optional": true,
-                        "default_value": {
-                            "s": "l2"
-                        },
-                        "allowed_values": {
-                            "ss": [
-                                "l1",
-                                "l2",
-                                "elasticnet",
-                                "None"
-                            ]
-                        }
-                    }
-                }
-            ],
             "inputs": [
                 {
-                    "name": "train_dataset",
-                    "desc": "Input train dataset.",
+                    "name": "in_ds",
+                    "desc": "Input table.",
                     "types": [
                         "sf.table.individual"
                     ],
                     "attrs": [
                         {
-                            "name": "ids",
-                            "desc": "Id columns will not be trained."
-                        },
-                        {
-                            "name": "label",
-                            "desc": "Label column.",
-                            "col_min_cnt_inclusive": "1",
-                            "col_max_cnt_inclusive": "1"
+                            "name": "drop_features",
+                            "desc": "Features to drop.",
+                            "col_min_cnt_inclusive": "1"
                         }
                     ]
                 }
             ],
             "outputs": [
                 {
-                    "name": "output_model",
-                    "desc": "Output model.",
+                    "name": "out_ds",
+                    "desc": "Output table.",
                     "types": [
-                        "sf.model.lr"
+                        "sf.table.individual"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "preprocessing",
+            "name": "psi",
+            "desc": "PSI between two parties.",
+            "version": "0.0.1",
+            "inputs": [
+                {
+                    "name": "input1",
+                    "desc": "Individual table for party 1",
+                    "types": [
+                        "sf.table.individual"
+                    ],
+                    "attrs": [
+                        {
+                            "name": "key",
+                            "desc": "Column(s) used to join.",
+                            "col_min_cnt_inclusive": "1"
+                        }
+                    ]
+                },
+                {
+                    "name": "input2",
+                    "desc": "Individual table for party 2",
+                    "types": [
+                        "sf.table.individual"
+                    ],
+                    "attrs": [
+                        {
+                            "name": "key",
+                            "desc": "Column(s) used to join.",
+                            "col_min_cnt_inclusive": "1"
+                        }
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "psi_output",
+                    "desc": "Output table",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "preprocessing",
+            "name": "train_test_split",
+            "desc": "Split datasets into random train and test subsets.\n- Please check: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html",
+            "version": "0.0.1",
+            "attrs": [
+                {
+                    "name": "train_size",
+                    "desc": "Proportion of the dataset to include in the train subset.",
+                    "type": "AT_FLOAT",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "f": 0.75
+                        },
+                        "lower_bound_enabled": true,
+                        "lower_bound": {},
+                        "upper_bound_enabled": true,
+                        "upper_bound": {
+                            "f": 1
+                        }
+                    }
+                },
+                {
+                    "name": "fix_random",
+                    "desc": "Whether to fix random.",
+                    "type": "AT_BOOL",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "b": true
+                        }
+                    }
+                },
+                {
+                    "name": "random_state",
+                    "desc": "Specify the random seed of the shuffling.",
+                    "type": "AT_INT",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "i64": "1024"
+                        },
+                        "lower_bound_enabled": true,
+                        "lower_bound": {}
+                    }
+                },
+                {
+                    "name": "shuffle",
+                    "desc": "Whether to shuffle the data before splitting.",
+                    "type": "AT_BOOL",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "b": true
+                        }
+                    }
+                }
+            ],
+            "inputs": [
+                {
+                    "name": "input_data",
+                    "desc": "Input table.",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "train",
+                    "desc": "Output train dataset.",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                },
+                {
+                    "name": "test",
+                    "desc": "Output test dataset.",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "stats",
+            "name": "pearsonr",
+            "desc": "Calculate Pearson's product-moment correlation coefficient for individual dataset.",
+            "version": "0.0.1",
+            "inputs": [
+                {
+                    "name": "input_data",
+                    "desc": "Input table.",
+                    "types": [
+                        "sf.table.individual"
+                    ],
+                    "attrs": [
+                        {
+                            "name": "feature_selects",
+                            "desc": "Specify which features to calculate correlation coefficient with. If empty, all features will be used"
+                        }
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "report",
+                    "desc": "Output Pearson's product-moment correlation coefficient report.",
+                    "types": [
+                        "sf.report"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "stats",
+            "name": "table_statistics",
+            "desc": "Get a table of statistics,\nincluding each column's\n1. datatype\n2. total_count\n3. count\n4. count_na\n5. na_ratio\n6. min\n7. max\n8. mean\n9. var\n10. std\n11. sem\n12. skewness\n13. kurtosis\n14. q1\n15. q2\n16. q3\n17. moment_2\n18. moment_3\n19. moment_4\n20. central_moment_2\n21. central_moment_3\n22. central_moment_4\n23. sum\n24. sum_2\n25. sum_3\n26. sum_4\n- moment_2 means E[X^2].\n- central_moment_2 means E[(X - mean(X))^2].\n- sum_2 means sum(X^2).",
+            "version": "0.0.1",
+            "inputs": [
+                {
+                    "name": "input_data",
+                    "desc": "Input table.",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "report",
+                    "desc": "Output table statistics report.",
+                    "types": [
+                        "sf.report"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "stats",
+            "name": "vif",
+            "desc": "Calculate Variance Inflation Factor(VIF) for individual dataset",
+            "version": "0.0.1",
+            "inputs": [
+                {
+                    "name": "input_data",
+                    "desc": "Input table.",
+                    "types": [
+                        "sf.table.individual"
+                    ],
+                    "attrs": [
+                        {
+                            "name": "feature_selects",
+                            "desc": "Specify which features to calculate VIF with. If empty, all features will be used."
+                        }
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "report",
+                    "desc": "Output Variance Inflation Factor(VIF) report.",
+                    "types": [
+                        "sf.report"
                     ]
                 }
             ]

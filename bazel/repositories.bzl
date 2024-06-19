@@ -53,11 +53,11 @@ def _com_github_trustedflow():
     maybe(
         http_archive,
         name = "trustedflow",
-        sha256 = "d4e6a26b794e07a9988d8396586605530df594d19c48a818071d4e9c3a385587",
-        strip_prefix = "trustedflow-0.2.0b0",
+        sha256 = "fb4889b47b7c849820220a725ed77d9b0c7831328846740fde27a8638cda32d9",
+        strip_prefix = "trustedflow-f366c6bf86dc63dc024b13b162e38a117455f7f8",
         type = "tar.gz",
         urls = [
-            "https://github.com/secretflow/trustedflow/archive/refs/tags/0.2.0b0.tar.gz",
+            "https://github.com/secretflow/trustedflow/archive/f366c6bf86dc63dc024b13b162e38a117455f7f8.tar.gz",
         ],
     )
 

@@ -19,7 +19,7 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 #include "yacl/base/exception.h"
-#include "yacl/crypto/base/sign/rsa_signing.h"
+#include "yacl/crypto/sign/rsa_signing.h"
 
 #include "teeapps/utils/crypto_util.h"
 #include "teeapps/utils/io_util.h"

@@ -22,6 +22,6 @@ py_library(
         "common.py",
     ],
     deps = [
-        "//teeapps/proto:py_task_proto",
+        "@sf_spec//:py_sf_spec_proto",
     ],
 )

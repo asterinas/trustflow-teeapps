@@ -13,19 +13,18 @@
 # limitations under the License.
 
 
+import json
 import logging
-import numpy as np
 import sys
 
 import pandas
 from google.protobuf import json_format
-
-# The following packages will be generated automatically by scripts
-# when building occlum workspace
-from teeapps.proto import task_pb2
-from teeapps.biz.common import common
-from secretflow.spec.v1.report_pb2 import Div, Report, Tab, Table
 from secretflow.spec.v1.component_pb2 import Attribute
+from secretflow.spec.v1.report_pb2 import Div, Report, Tab, Table
+
+from teeapps.biz.common import common
+
+COMPONENT_NAME = "table_statistics"
 
 
 def table_statistics(table: pandas.DataFrame) -> pandas.DataFrame:
@@ -94,35 +93,36 @@ def table_statistics(table: pandas.DataFrame) -> pandas.DataFrame:
     return result
 
 
-def run_table_statistics(config_json: str):
+def run_table_statistics(task_config: dict):
     logging.info("Running table_statistics...")
 
-    task_config = task_pb2.TaskConfig()
-    json_format.Parse(config_json, task_config)
     assert (
-        task_config.app_type == "OP_TABLE_STATISTICS"
-    ), "App type is not 'OP_TABLE_STATISTICS'"
-    assert len(task_config.inputs) == 1, "Table_staticstics should has only 1 inputs"
-    assert len(task_config.outputs) == 1, "Table_staticstics should has only 1 outputs"
+        task_config[common.COMPONENT_NAME] == COMPONENT_NAME
+    ), f"Component name should be {COMPONENT_NAME}, but got {task_config[common.COMPONENT_NAME]}"
+
+    inputs = task_config[common.INPUTS]
+    outputs = task_config[common.OUTPUTS]
+
+    assert len(inputs) == 1, f"{COMPONENT_NAME} should have only 1 inputs"
+    assert len(outputs) == 1, f"{COMPONENT_NAME} should have only 1 outputs"
 
     # deal input data
     logging.info("Dealing input data...")
     df = common.gen_data_frame(
-        task_config.inputs[0], usecols=task_config.inputs[0].schema.features[:]
+        inputs[0], usecols=inputs[0][common.SCHEMA][common.FEATURES]
     )
     stats = table_statistics(df)
 
-    headers, rows = [], []
-    for stat in stats.columns:
-        headers.append(Table.HeaderItem(name=stat, desc="", type="str"))
+    headers = [Table.HeaderItem(name=col, desc="", type="str") for col in stats.columns]
 
-    for rol_name, stat_row in stats.iterrows():
-        rows.append(
-            Table.Row(
-                name=rol_name,
-                items=[Attribute(s=str(stat_row[stat])) for stat in stats.columns],
-            )
+    rows = [
+        Table.Row(
+            name=rol_name,
+            items=[Attribute(s=str(stat_row[stat])) for stat in stats.columns],
         )
+        for rol_name, stat_row in stats.iterrows()
+    ]
+
     stats_table = Table(headers=headers, rows=rows)
     report = Report(
         name="table statistics",
@@ -149,29 +149,34 @@ def run_table_statistics(config_json: str):
         preserving_proto_field_name=True,
         indent=0,
     )
-    with open(task_config.outputs[0].data_path, "w") as report_f:
+    with open(outputs[0][common.DATA_PATH], "w") as report_f:
         report_f.write(report_json)
 
 
 def main():
-    assert len(sys.argv) == 2, "Wrong arguments number: {len(sys.argv)}"
+    assert len(sys.argv) == 2, f"Wrong arguments number: {len(sys.argv)}"
     # load task_config json
-    config_path = sys.argv[1]
-    logging.info("Reading config file...")
-    with open(config_path, "r") as config_f:
-        config_json = config_f.read()
-        logging.debug(f"Configurations: %s", config_json)
-        run_table_statistics(config_json)
+    task_config_path = sys.argv[1]
+    logging.info("Reading task config file...")
+    with open(task_config_path, "r") as task_config_f:
+        task_config = json.load(task_config_f)
+        logging.debug(f"Configurations: {task_config}")
+        run_table_statistics(task_config)
 
 
 """
-This app is expected to be launched by app framework via running a subprocess
-`python3 table_statistics.py config`. Before launching the subprocess, the app framework will
-firstly generate a config file which is a json file containing all the required
-parameters and is serialized from the task.proto. Currently we do not handle any
-errors/exceptions in this file as the outer app framework will capture the stderr
+This app is expected to be launched by app framework via running a subprocess 
+`python3 table_statistics.py config`. Before launching the subprocess, the app framework will 
+firstly generate a config file which is a json file containing all the required 
+parameters and is serialized from the task.proto. Currently we do not handle any 
+errors/exceptions in this file as the outer app framework will capture the stderr 
 and stdout.
 """
 if __name__ == "__main__":
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    # TODO set log level
+    logging.basicConfig(
+        stream=sys.stdout,
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
     main()

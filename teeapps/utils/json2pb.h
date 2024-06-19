@@ -17,10 +17,8 @@
 #include "google/protobuf/util/json_util.h"
 #include "yacl/base/exception.h"
 
-#define PB2JSON(pbmsg, p_jsonstr)                                     \
+#define PB2JSON(pbmsg, p_jsonstr, options)                            \
   do {                                                                \
-    ::google::protobuf::util::JsonPrintOptions options;               \
-    options.preserve_proto_field_names = false;                       \
     using google::protobuf::util::MessageToJsonString;                \
     (p_jsonstr)->clear();                                             \
     auto status = MessageToJsonString((pbmsg), (p_jsonstr), options); \

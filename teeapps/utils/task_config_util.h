@@ -18,8 +18,6 @@
 #include "teeapps/component/eval_param_reader.h"
 #include "teeapps/framework/constants.h"
 
-#include "teeapps/proto/task.pb.h"
-
 namespace teeapps {
 namespace utils {
 
@@ -41,11 +39,6 @@ inline std::string GenSchemaPath(const std::string& data_uri) {
   return fmt::format("{}/{}.schema", teeapps::framework::kTaskBaseDir,
                      data_uri);
 }
-
-void FillTaskConfigParams(
-    teeapps::TaskConfig& task_config,
-    const secretflow::spec::v1::ComponentDef& component_def,
-    const teeapps::component::EvalParamReader& eval_param_reader);
 
 void GenAndDumpTaskConfig(
     const std::string& app_mode,

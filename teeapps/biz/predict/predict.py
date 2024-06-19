@@ -13,125 +13,164 @@
 # limitations under the License.
 
 
+import json
 import logging
 import sys
 
-import pandas
-import numpy as np
-from google.protobuf import json_format
 import joblib
-
-# The following packages will be generated automatically by scripts
-# when building occlum workspace
-from teeapps.proto import task_pb2
-from teeapps.biz.common import common
-from teeapps.proto.params import predict_pb2
+import numpy as np
+import pandas
+from google.protobuf import json_format
+from lightgbm import LGBMClassifier, LGBMRegressor
 from secretflow.spec.v1 import data_pb2
+from sklearn.linear_model import LogisticRegression, Ridge
+from xgboost import XGBClassifier, XGBRegressor
+
+from teeapps.biz.common import common
+
+COMPONENT_NAMES = ["xgb_predict", "lr_predict", "lgbm_predict"]
+
+PRED_NAME = "pred_name"
+SAVE_LABEL = "save_label"
+LABEL_NAME = "label_name"
+SAVE_ID = "save_id"
+ID_NAME = "id_name"
+COL_NAMES = "col_names"
+
+IDS = "ids"
+LABEL = "label"
 
 
-def run_predict(config_json: str):
+def run_predict(task_config: dict):
     logging.info("Running predict...")
 
-    task_config = task_pb2.TaskConfig()
-    json_format.Parse(config_json, task_config)
-    assert task_config.app_type == "OP_PREDICT", "App type is not 'OP_PREDICT'"
-    assert len(task_config.inputs) == 2, "Predict should has only 2 input"
-    assert len(task_config.outputs) == 1, "Predict should has only 1 output"
     assert (
-        len(task_config.inputs[0].schema.ids) <= 1
-    ), "Predict should has at most 1 ids"
-    assert (
-        len(task_config.inputs[0].schema.labels) <= 1
-    ), "Predict should has at most 1 labels"
+        task_config[common.COMPONENT_NAME] in COMPONENT_NAMES
+    ), f"Component name should be in {COMPONENT_NAMES}, but got {task_config[common.COMPONENT_NAME]}"
+
+    inputs = task_config[common.INPUTS]
+    outputs = task_config[common.OUTPUTS]
+
+    assert len(inputs) == 2, "Predict should have only 2 input"
+    assert len(outputs) == 1, "Predict should have only 1 output"
 
     # deal input data
     logging.info("Dealing input data...")
-    # params
-    params = predict_pb2.PredictionParams()
-    task_config.params.Unpack(params)
-    output_control = params.output_control
     # get test data
-    df = common.gen_data_frame(task_config.inputs[0])
-    ids = task_config.inputs[0].schema.ids[:]
-    labels = task_config.inputs[0].schema.labels[:]
-    features = task_config.inputs[0].schema.features[:]
+    df = common.gen_data_frame(inputs[0])
+
     # load model
     logging.info("Loading model...")
-    model = joblib.load(task_config.inputs[1].data_path)
-    predict_data = df[model.feature_names_in_]
-    # predict data
+    model = joblib.load(inputs[1][common.DATA_PATH])
+
     logging.info("Model predicting...")
-    # prob list, only get index=1
-    prob_result = pandas.DataFrame(
-        [round(x, 6) for x in model.predict_proba(predict_data)[:, 1]],
-        columns=[output_control.score_field_name],
+    # check model type
+    if isinstance(model, (XGBClassifier, LogisticRegression)):
+        predict_data = df[model.feature_names_in_]
+        # prob list, only get index=1, which means positive probability
+        predict_result = pandas.DataFrame(
+            [round(x, 6) for x in model.predict_proba(predict_data)[:, 1]],
+            columns=[task_config[PRED_NAME]],
+        )
+    elif isinstance(model, (XGBRegressor, Ridge)):
+        predict_data = df[model.feature_names_in_]
+        predict_result = pandas.DataFrame(
+            [round(x, 6) for x in model.predict(predict_data)],
+            columns=[task_config[PRED_NAME]],
+        )
+    elif isinstance(model, LGBMClassifier):
+        predict_data = df[model.origin_feature_name_]
+        predict_result = pandas.DataFrame(
+            [round(x, 6) for x in model.predict_proba(predict_data)[:, 1]],
+            columns=[task_config[PRED_NAME]],
+        )
+    elif isinstance(model, LGBMRegressor):
+        predict_data = df[model.origin_feature_name_]
+        predict_result = pandas.DataFrame(
+            [round(x, 6) for x in model.predict(predict_data)],
+            columns=[task_config[PRED_NAME]],
+        )
+    else:
+        raise RuntimeError(f"Unsupported model type: {type(model)}")
+
+    result_list = [predict_result]
+    ids = (
+        inputs[0][IDS]
+        if len(inputs[0][IDS]) > 0
+        else inputs[0][common.SCHEMA][common.IDS]
     )
-    result_list = [prob_result]
+    labels = (
+        inputs[0][LABEL]
+        if len(inputs[0][LABEL]) > 0
+        else inputs[0][common.SCHEMA][common.LABELS]
+    )
+    features = inputs[0][common.SCHEMA][common.FEATURES]
+
     # output data
-    if output_control.output_label == True and (len(labels) >= 1):
-        label_field_name = (
-            output_control.label_field_name
-            if len(output_control.label_field_name) > 0
-            else labels[0]
+    if task_config[SAVE_ID] == True:
+        assert len(ids) > 0, "ID should not empty when save_id is true."
+        result_list.append(df[[ids[0]]].rename(columns={ids[0]: task_config[ID_NAME]}))
+    if task_config[SAVE_LABEL] == True:
+        assert len(labels) > 0, "Label should not empty when save_label is true."
+        result_list.append(
+            df[[labels[0]]].rename(columns={labels[0]: task_config[LABEL_NAME]})
         )
-        result_list.append(df[labels].rename(columns={labels[0]: label_field_name}))
-    if output_control.output_id == True and (len(ids) >= 1):
-        id_column_name = (
-            output_control.id_field_name
-            if len(output_control.id_field_name) > 0
-            else ids[0]
-        )
-        result_list.append(df[ids].rename(columns={ids[0]: id_column_name}))
-    result_list.append(df[output_control.col_names[:]])
+    if len(task_config[COL_NAMES]) > 0:
+        result_list.append(df[task_config[COL_NAMES]])
     result = pandas.concat(result_list, axis=1)
     # dump data
     logging.info("Dumping data...")
-    output_path = task_config.outputs[0].data_path
+    output_path = outputs[0][common.DATA_PATH]
     result.to_csv(output_path, index=False)
     # dump output schema
     # set default type TABLE_SCHEMA_STRING_TYPE
     schema = data_pb2.TableSchema()
-    if output_control.output_id:
-        schema.ids.append(output_control.id_field_name)
-        schema.id_types.append(common.TABLE_SCHEMA_STRING_TYPE)
-    schema.labels.append(output_control.score_field_name)
+    schema.labels.append(task_config[PRED_NAME])
     schema.label_types.append(common.TABLE_SCHEMA_STRING_TYPE)
-    if output_control.output_label:
-        schema.labels.append(output_control.label_field_name)
+    if task_config[SAVE_ID] == True:
+        schema.ids.append(task_config[ID_NAME])
+        schema.id_types.append(common.TABLE_SCHEMA_STRING_TYPE)
+    if task_config[SAVE_LABEL]:
+        schema.labels.append(task_config[LABEL_NAME])
         schema.label_types.append(common.TABLE_SCHEMA_STRING_TYPE)
-    if len(output_control.col_names) > 0:
-        schema.features.extend(output_control.col_names)
+    if len(task_config[COL_NAMES]) > 0:
+        schema.features.extend(task_config[COL_NAMES])
         schema.feature_types.extend(
-            [common.TABLE_SCHEMA_STRING_TYPE for _ in output_control.col_names]
+            [common.TABLE_SCHEMA_STRING_TYPE for _ in task_config[COL_NAMES]]
         )
     else:
         schema.features.extend(features)
         schema.feature_types.extend([common.TABLE_SCHEMA_STRING_TYPE for _ in features])
     schema = common.gen_output_schema(result, schema)
     schema_json = json_format.MessageToJson(schema)
-    with open(task_config.outputs[0].data_schema_path, "w") as schema_f:
+    with open(outputs[0][common.DATA_SCHEMA_PATH], "w") as schema_f:
         schema_f.write(schema_json)
 
 
 def main():
     assert len(sys.argv) == 2, f"Wrong arguments number: {len(sys.argv)}"
     # load task_config json
-    config_path = sys.argv[1]
-    logging.info("Reading config file...")
-    with open(config_path, "r") as config_f:
-        config_json = config_f.read()
-        logging.debug(f"Configurations: {config_json}")
-        run_predict(config_json)
+    task_config_path = sys.argv[1]
+    logging.info("Reading task config file...")
+    with open(task_config_path, "r") as task_config_f:
+        task_config = json.load(task_config_f)
+        logging.debug(f"Configurations: {task_config}")
+        run_predict(task_config)
 
 
 """
-This app is expected to be launched by app framework via running a subprocess
-`python3 predict.py config`. Before launching the subprocess, the app framework will
-firstly generate a config file which is a json file containing all the required
-parameters and is serialized from the task.proto. Currently we do not handle any
-errors/exceptions in this file as the outer app framework will capture the stderr
+This app is expected to be launched by app framework via running a subprocess 
+`python3 predict.py config`. Before launching the subprocess, the app framework will 
+firstly generate a config file which is a json file containing all the required 
+parameters and is serialized from the task.proto. Currently we do not handle any 
+errors/exceptions in this file as the outer app framework will capture the stderr 
 and stdout.
 """
 if __name__ == "__main__":
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    # TODO set log level
+    logging.basicConfig(
+        stream=sys.stdout,
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
     main()

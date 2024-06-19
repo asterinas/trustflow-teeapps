@@ -23,7 +23,7 @@ class WoeBinningComponent : public Component {
  private:
   void Init();
 
-  explicit WoeBinningComponent(const std::string& name = "vert_woe_binning",
+  explicit WoeBinningComponent(const std::string& name = "woe_binning",
                                const std::string& domain = "feature",
                                const std::string& version = "0.0.1",
                                const std::string& desc =

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_proto_grpc//cpp:defs.bzl", "cpp_grpc_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -32,4 +33,9 @@ cc_proto_library(
     deps = [
         ":sf_apis_proto",
     ],
+)
+
+cpp_grpc_library(
+    name = "cc_sf_apis_grpc",
+    deps = [":sf_apis_proto"],
 )

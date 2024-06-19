@@ -24,7 +24,7 @@ class WoeSubstitutionComponent : public Component {
   void Init();
 
   explicit WoeSubstitutionComponent(
-      const std::string& name = "vert_woe_substitution",
+      const std::string& name = "woe_substitution",
       const std::string& domain = "feature",
       const std::string& version = "0.0.1",
       const std::string& desc =

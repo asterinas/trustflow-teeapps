@@ -13,6 +13,7 @@
 # limitations under the License.
 
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_proto_grpc//cpp:defs.bzl", "cpp_grpc_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -26,4 +27,9 @@ proto_library(
     deps = [
         "@com_google_protobuf//:any_proto",
     ],
+)
+
+cpp_grpc_library(
+    name = "cc_kuscia_proto",
+    deps = [":kuscia_proto"],
 )

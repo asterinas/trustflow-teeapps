@@ -20,15 +20,15 @@
 #include "absl/types/span.h"
 #include "cppcodec/base64_url_unpadded.hpp"
 #include "spdlog/spdlog.h"
-#include "yacl/crypto/base/aead/gcm_crypto.h"
-#include "yacl/crypto/base/aead/sm4_mac.h"
-#include "yacl/crypto/base/block_cipher/symmetric_crypto.h"
-#include "yacl/crypto/base/hmac/hmac_sha256.h"
-#include "yacl/crypto/base/pke/asymmetric_crypto.h"
-#include "yacl/crypto/base/pke/asymmetric_rsa_crypto.h"
-#include "yacl/crypto/base/pke/asymmetric_sm2_crypto.h"
-#include "yacl/crypto/base/sign/rsa_signing.h"
-#include "yacl/crypto/utils/rand.h"
+#include "yacl/crypto/aead/gcm_crypto.h"
+#include "yacl/crypto/aead/sm4_mac.h"
+#include "yacl/crypto/block_cipher/symmetric_crypto.h"
+#include "yacl/crypto/hmac/hmac_sha256.h"
+#include "yacl/crypto/pke/asymmetric_crypto.h"
+#include "yacl/crypto/pke/asymmetric_rsa_crypto.h"
+#include "yacl/crypto/pke/asymmetric_sm2_crypto.h"
+#include "yacl/crypto/rand/rand.h"
+#include "yacl/crypto/sign/rsa_signing.h"
 
 #include "teeapps/utils/json2pb.h"
 
@@ -115,8 +115,12 @@ secretflowapis::v2::sdc::capsule_manager::EncryptedRequest GenEncryptedRequest(
     const std::string& peer_cert, const bool has_signature,
     const std::string& sig_alg, const std::string& key_enc_alg,
     const std::string& content_enc_alg) {
+  ::google::protobuf::util::JsonPrintOptions options;
+  options.preserve_proto_field_names = false;
+  options.always_print_primitive_fields = true;
+
   std::string request_str;
-  PB2JSON(request, &request_str);
+  PB2JSON(request, &request_str, options);
 
   secretflowapis::v2::sdc::capsule_manager::EncryptedRequest enc_req;
   secretflowapis::v2::RequestHeader header;
@@ -126,7 +130,7 @@ secretflowapis::v2::sdc::capsule_manager::EncryptedRequest GenEncryptedRequest(
   jwe_header.set_alg(key_enc_alg);
   jwe_header.set_enc(content_enc_alg);
   std::string jwe_header_str;
-  PB2JSON(jwe_header, &jwe_header_str);
+  PB2JSON(jwe_header, &jwe_header_str, options);
   jwe.set_protected_header(
       cppcodec::base64_url_unpadded::encode(jwe_header_str));
 
@@ -154,7 +158,7 @@ secretflowapis::v2::sdc::capsule_manager::EncryptedRequest GenEncryptedRequest(
     X509CertPemToDerBase64(cert, cert_der);
     jws_header.add_x5c(cert_der);
     std::string jws_header_str;
-    PB2JSON(jws_header, &jws_header_str);
+    PB2JSON(jws_header, &jws_header_str, options);
     jws.set_protected_header(
         cppcodec::base64_url_unpadded::encode(jws_header_str));
 
@@ -169,7 +173,7 @@ secretflowapis::v2::sdc::capsule_manager::EncryptedRequest GenEncryptedRequest(
 
     // Jwe(jws)
     std::string jws_str;
-    PB2JSON(jws, &jws_str);
+    PB2JSON(jws, &jws_str, options);
     std::vector<uint8_t> cipher(jws_str.size());
     yacl::crypto::Aes128GcmCrypto(cek, iv).Encrypt(jws_str, aad_b64,
                                                    absl::Span<uint8_t>(cipher),

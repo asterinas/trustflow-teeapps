@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_python//python:defs.bzl", "py_binary", "py_test")
+load("@rules_python//python:defs.bzl", "py_binary")
+
+package(default_visibility = ["//visibility:public"])
 
 py_binary(
     name = "table_statistics",
@@ -21,18 +23,6 @@ py_binary(
     ],
     deps = [
         "//teeapps/biz/common",
-        "//teeapps/proto:py_sf_spec_proto",
-        "//teeapps/proto:py_task_proto",
-    ],
-)
-
-py_test(
-    name = "table_statistics_test",
-    srcs = ["table_statistics_test.py"],
-    data = [
-        "//teeapps/biz/testdata",
-    ],
-    deps = [
-        ":table_statistics",
+        "@sf_spec//:py_sf_spec_proto",
     ],
 )

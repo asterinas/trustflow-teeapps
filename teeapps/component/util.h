@@ -55,8 +55,16 @@ struct DistDataType {
   static constexpr char INDIVIDUAL_TABLE[] = "sf.table.individual";
   static constexpr char LR_MODEL[] = "sf.model.lr";
   static constexpr char XGB_MODEL[] = "sf.model.xgb";
+  static constexpr char LGBM_MODEL[] = "sf.model.lgbm";
   static constexpr char WOE_RUNNING_RULE[] = "sf.rule.woe_binning";
   static constexpr char REPORT[] = "sf.report";
+
+  static const std::unordered_set<std::string>& get_all_types() {
+    static const std::unordered_set<std::string> types{
+        VERTICAL_TABLE, INDIVIDUAL_TABLE, LR_MODEL, XGB_MODEL,
+        LGBM_MODEL,     WOE_RUNNING_RULE, REPORT};
+    return types;
+  }
 };
 
 struct TableColParam {

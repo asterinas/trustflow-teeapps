@@ -22,9 +22,6 @@ teeapps_cc_library(
     hdrs = ["kuscia_task_config.h"],
     deps = [
         "//teeapps/kuscia:kuscia_client",
-        "//teeapps/proto:cc_kuscia_proto",
-        "//teeapps/proto:cc_sf_apis_grpc",
-        "//teeapps/proto:cc_sf_spec_proto",
         "//teeapps/utils:crypto_util",
         "//teeapps/utils:data_uri_util",
         "//teeapps/utils:io_util",
@@ -32,6 +29,9 @@ teeapps_cc_library(
         "//teeapps/utils:output_dist_data_util",
         "@com_github_rapidjson//:rapidjson",
         "@cppcodec",
+        "@kuscia_proto//:cc_kuscia_proto",
+        "@sf_apis//:cc_sf_apis_grpc",
+        "@sf_spec//:cc_sf_spec_proto",
         "@yacl//yacl/base:exception",
     ],
 )
@@ -41,10 +41,10 @@ teeapps_cc_library(
     srcs = ["kuscia_client.cc"],
     hdrs = ["kuscia_client.h"],
     deps = [
-        "//teeapps/proto:cc_kuscia_proto",
         "//teeapps/utils:io_util",
         "@com_github_gflags_gflags//:gflags",
         "@com_github_grpc_grpc//:grpc++",
+        "@kuscia_proto//:cc_kuscia_proto",
         "@yacl//yacl/base:exception",
     ],
 )

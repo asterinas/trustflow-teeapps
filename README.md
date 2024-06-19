@@ -8,7 +8,7 @@ TeeApps contain a general framework for developing TEE applications and various 
 ## Quick Start
 
 ### Prepare dataset
-Before running TeeApps, you should use [Capsule Manager SDK](https://github.com/secretflow/capsule-manager-sdk) to generate data keys, encrypt datasets and then register data keys and data policies to [Capsule Manager](https://github.com/secretflow/capsule-manager).
+Before running TeeApps, you should use [Capsule Manager SDK](https://github.com/secretflow/capsule-manager-sdk) to generate data keys, encrypt datasets and then register data keys and data policies to [Capsule Manager](https://github.com/secretflow/capsule-manager). 
 
 Here we will use the open-source breast cancer dataset as an example. The dataset is provided by the University of California, Irvine (UCI). It contains 569 samples. Each sample has an ID and 10 features, making it a typical binary classification dataset.
 
@@ -43,7 +43,7 @@ docker cp alice.csv.enc teeapps-sim:/host/testdata/breast_cancer/
 
 docker cp bob.csv.enc teeapps-sim:/host/testdata/breast_cancer/
 ```
-3. Generate PSI task config. Suppose carol has access to alice.csv and bob.csv.
+3. Generate PSI task config. Suppose carol has access to alice.csv and bob.csv. 
 ```sh
 docker cp carol.key teeapps-sim:/host/integration_test/
 
@@ -60,7 +60,7 @@ python3 convert.py --cert_path carol.crt --prikey_path carol.key --task_config_p
 ```
 4. Run PSI
 ```sh
-/home/teeapp/sim/teeapps/main --plat=sim --enable_console_logger=true --enable_capsule_tls=false --entry_task_config_path=/host/integration_test/psi_task.json
+/home/teeapp/sim/teeapps/main --plat=sim --enable_console_logger=true --enable_capsule_tls=false --entry_task_config_path=/host/integration_test/psi_task.json 
 ```
 5. Check outputs
 
@@ -184,7 +184,7 @@ docker cp alice.csv.enc teeapps-sgx:/home/teeapp/occlum/occlum_instance/testdata
 docker cp bob.csv.enc teeapps-sgx:/home/teeapp/occlum/occlum_instance/testdata/breast_cancer/
 ```
 
-5. Generate PSI task config. Suppose carol has access to alice.csv and bob.csv.
+5. Generate PSI task config. Suppose carol has access to alice.csv and bob.csv. 
 ```sh
 docker cp carol.key teeapps-sgx:/home/teeapp/occlum/occlum_instance/integration_test/
 
@@ -211,7 +211,7 @@ occlum run /bin/main --plat=sgx --enable_console_logger=true --enable_capsule_tl
 
 Default log path is /home/teeapp/occlum/occlum_instance/log/app.log
 
-You can get data keys and decrypt /home/teeapp/occlum/occlum_instance/testdata/breast_cancer/join_table with [Capsule Manager SDK](https://github.com/secretflow/capsule-manager-sdk).
+You can get data keys and decrypt /home/teeapp/occlum/occlum_instance/testdata/breast_cancer/join_table with [Capsule Manager SDK](https://github.com/secretflow/capsule-manager-sdk). 
 
 You can also modify task configs or write a new task config by yourself to run other applications with encrypted join_table.
 
@@ -233,7 +233,7 @@ docker cp alice.csv.enc teeapps-tdx:/host/testdata/breast_cancer/
 docker cp bob.csv.enc teeapps-tdx:/host/testdata/breast_cancer/
 ```
 
-4. Generate PSI task config. Suppose carol has access to alice.csv and bob.csv.
+4. Generate PSI task config. Suppose carol has access to alice.csv and bob.csv. 
 ```sh
 docker cp carol.key teeapps-tdx:/host/integration_test/
 
@@ -251,7 +251,7 @@ python3 convert.py --cert_path carol.crt --prikey_path carol.key --task_config_p
 
 5. Run PSI
 ```sh
-/home/teeapp/tdx/teeapps/main --plat=tdx --enable_console_logger=true --enable_capsule_tls=false --entry_task_config_path=/host/integration_test/psi_task.json
+/home/teeapp/tdx/teeapps/main --plat=tdx --enable_console_logger=true --enable_capsule_tls=false --entry_task_config_path=/host/integration_test/psi_task.json 
 ```
 
 6. Check outputs or run other applications
@@ -290,7 +290,7 @@ docker cp alice.csv.enc teeapps-csv:/host/testdata/breast_cancer/
 docker cp bob.csv.enc teeapps-csv:/host/testdata/breast_cancer/
 ```
 
-3. Generate PSI task config. Suppose carol has access to alice.csv and bob.csv.
+3. Generate PSI task config. Suppose carol has access to alice.csv and bob.csv. 
 ```sh
 docker cp carol.key teeapps-csv:/host/integration_test/
 
@@ -308,7 +308,7 @@ python3 convert.py --cert_path carol.crt --prikey_path carol.key --task_config_p
 
 4. Run PSI
 ```sh
-/home/teeapp/csv/teeapps/main --plat=csv --enable_console_logger=true --enable_capsule_tls=false --entry_task_config_path=/host/integration_test/psi_task.json
+/home/teeapp/csv/teeapps/main --plat=csv --enable_console_logger=true --enable_capsule_tls=false --entry_task_config_path=/host/integration_test/psi_task.json 
 ```
 
 5. Check outputs or run other applications
@@ -367,7 +367,7 @@ python3 convert.py --cert_path carol.crt --prikey_path carol.key --task_config_p
 /home/teeapp/sim/teeapps/main --plat=sim --enable_console_logger=true --enable_capsule_tls=true --entry_task_config_path=/host/integration_test/psi_task.json
 ```
 
-### SGX Mode (Occlum Mode)
+### SGX Mode (Occlum Mode) 
 ```sh
 docker cp ca.crt teeapps-sgx:/home/teeapp/occlum/occlum_instance/certs/ca.crt
 

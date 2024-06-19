@@ -23,7 +23,7 @@ namespace teeapps {
 namespace utils {
 
 namespace {
-constexpr int kMaxBufferSize = 1024 * 1024;  // 1MB
+constexpr int kMaxBufferSize = 4096;  // 4KB
 
 using UniqueFile = std::unique_ptr<FILE, decltype(&std::fclose)>;
 
@@ -62,22 +62,6 @@ void CopyFile(const std::string& src_file_path,
     YACL_ENFORCE_EQ(std::fwrite(buf, sizeof(uint8_t), bytes_read, dest.get()),
                     bytes_read, "Failed to write to {} when copying from {}",
                     dst_file_path, src_file_path);
-  }
-}
-
-void MergeVerticalCsv(const std::string& left_file_path,
-                      const std::string& right_file_path,
-                      const std::string& dest_file_path) {
-  yacl::io::FileInputStream left_in(left_file_path);
-  yacl::io::FileInputStream right_in(right_file_path);
-  yacl::io::FileOutputStream out(dest_file_path, false);
-
-  std::string left_line;
-  std::string right_line;
-  while (!left_in.Eof() && !right_in.Eof()) {
-    left_in.GetLine(&left_line, '\n');
-    right_in.GetLine(&right_line, '\n');
-    out.Write(left_line + "," + right_line + "\n");
   }
 }
 
