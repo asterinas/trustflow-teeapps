@@ -16,8 +16,8 @@
 
 #include "cppcodec/base64_url_unpadded.hpp"
 #include "spdlog/spdlog.h"
-#include "yacl/crypto/base/hash/hash_utils.h"
-#include "yacl/crypto/utils/rand.h"
+#include "yacl/crypto/hash/hash_utils.h"
+#include "yacl/crypto/rand/rand.h"
 
 #include "teeapps/framework/constants.h"
 #include "teeapps/utils/io_util.h"

@@ -93,18 +93,7 @@ void AddDataColFromSchema(
 void GetDataColsFromDistData(
     const secretflow::spec::v1::DistData& dist_data,
     std::vector<::kuscia::proto::api::v1alpha1::DataColumn>& data_cols) {
-  if (dist_data.type() == teeapps::component::DistDataType::VERTICAL_TABLE) {
-    secretflow::spec::v1::VerticalTable vertical_table;
-    dist_data.meta().UnpackTo(&vertical_table);
-    YACL_ENFORCE(
-        vertical_table.schemas_size() == dist_data.data_refs_size(),
-        "vertical_table schema's size {} and data_ref's size {} not match",
-        vertical_table.schemas_size(), dist_data.data_refs_size());
-    for (const auto& schema : vertical_table.schemas()) {
-      AddDataColFromSchema(schema, data_cols);
-    }
-  } else if (dist_data.type() ==
-             teeapps::component::DistDataType::INDIVIDUAL_TABLE) {
+  if (dist_data.type() == teeapps::component::DistDataType::INDIVIDUAL_TABLE) {
     secretflow::spec::v1::IndividualTable individual_table;
     dist_data.meta().UnpackTo(&individual_table);
     YACL_ENFORCE(dist_data.data_refs_size() == 1,
@@ -131,11 +120,14 @@ void ConvertDistData2DomainData(
   domain_data.mutable_attributes()->insert({kSource, kSourceTee});
   domain_data.set_vendor(kTeeapps);
 
+  ::google::protobuf::util::JsonPrintOptions options;
+  options.preserve_proto_field_names = false;
+  options.always_print_primitive_fields = true;
+
   std::string dist_data_json;
-  PB2JSON(dist_data, &dist_data_json);
+  PB2JSON(dist_data, &dist_data_json, options);
   domain_data.mutable_attributes()->insert({kDistData, dist_data_json});
-  if (dist_data.type() == teeapps::component::DistDataType::VERTICAL_TABLE ||
-      dist_data.type() == teeapps::component::DistDataType::INDIVIDUAL_TABLE) {
+  if (dist_data.type() == teeapps::component::DistDataType::INDIVIDUAL_TABLE) {
     std::vector<::kuscia::proto::api::v1alpha1::DataColumn> data_cols;
     GetDataColsFromDistData(dist_data, data_cols);
     domain_data.mutable_columns()->Add(data_cols.begin(), data_cols.end());

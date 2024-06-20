@@ -30,12 +30,11 @@ teeapps_cc_library(
     srcs = ["ra_util.cc"],
     hdrs = ["ra_util.h"],
     deps = [
-        "//teeapps/proto:cc_sf_apis_grpc",
-        "@com_github_rapidjson//:rapidjson",
         "@com_google_absl//absl/strings",
         "@cppcodec",
+        "@sf_apis//:cc_sf_apis_grpc",
         "@trustedflow//trustedflow/attestation/generation/wrapper:generator_wrapper",
-        "@yacl//yacl/crypto/base/hash:hash_utils",
+        "@yacl//yacl/crypto/hash:hash_utils",
     ],
 )
 
@@ -45,14 +44,14 @@ teeapps_cc_library(
     hdrs = ["crypto_util.h"],
     deps = [
         ":io_util",
-        "//teeapps/proto:cc_sf_apis_grpc",
         "//teeapps/utils:json2pb",
         "@cppcodec",
-        "@yacl//yacl/crypto/base:openssl_wrappers",
-        "@yacl//yacl/crypto/base/envelope:digital_envelope",
-        "@yacl//yacl/crypto/base/hmac:hmac_sha256",
-        "@yacl//yacl/crypto/base/sign:rsa_signing",
-        "@yacl//yacl/crypto/utils:rand",
+        "@sf_apis//:cc_sf_apis_grpc",
+        "@yacl//yacl/crypto:openssl_wrappers",
+        "@yacl//yacl/crypto/envelope:digital_envelope",
+        "@yacl//yacl/crypto/hmac:hmac_sha256",
+        "@yacl//yacl/crypto/rand",
+        "@yacl//yacl/crypto/sign:rsa_signing",
         "@yacl//yacl/io/stream:file_io",
     ],
     alwayslink = True,
@@ -86,27 +85,18 @@ teeapps_cc_library(
 )
 
 teeapps_cc_library(
-    name = "tool",
-    srcs = ["tool.cc"],
-    hdrs = ["tool.h"],
-    deps = [
-        "@com_github_rapidjson//:rapidjson",
-        "@yacl//yacl/base:exception",
-    ],
-)
-
-teeapps_cc_library(
     name = "task_config_util",
     srcs = ["task_config_util.cc"],
     hdrs = ["task_config_util.h"],
     deps = [
+        "//teeapps/component:component_list",
         "//teeapps/component:eval_param_reader",
         "//teeapps/framework:constants",
-        "//teeapps/proto:cc_sf_spec_proto",
-        "//teeapps/proto:cc_task_proto",
         "//teeapps/utils:data_uri_util",
         "//teeapps/utils:io_util",
         "//teeapps/utils:json2pb",
+        "@com_github_rapidjson//:rapidjson",
+        "@sf_spec//:cc_sf_spec_proto",
         "@yacl//yacl/base:exception",
     ],
 )
@@ -118,12 +108,12 @@ teeapps_cc_library(
     deps = [
         "//teeapps/component:util",
         "//teeapps/framework:constants",
-        "//teeapps/proto:cc_kuscia_proto",
-        "//teeapps/proto:cc_sf_spec_proto",
         "//teeapps/utils:data_uri_util",
         "//teeapps/utils:io_util",
         "//teeapps/utils:json2pb",
         "//teeapps/utils:task_config_util",
+        "@kuscia_proto//:cc_kuscia_proto",
+        "@sf_spec//:cc_sf_spec_proto",
         "@yacl//yacl/base:exception",
     ],
 )

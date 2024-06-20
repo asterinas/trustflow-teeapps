@@ -13,178 +13,197 @@
 # limitations under the License.
 
 
+import json
 import logging
 import sys
 
-import pandas
 import numpy as np
-from google.protobuf import json_format
-
-# The following packages will be generated automatically by scripts
-# when building occlum workspace
-from teeapps.proto import task_pb2
+import pandas
 from teeapps.biz.common import common
-from teeapps.proto.params import woe_binning_pb2
+
+COMPONENT_NAME = "woe_binning"
+
+BINNING_METHOD = "binning_method"
+POSITIVE_LABEL = "positive_label"
+BIN_NUM = "bin_num"
+FEATURE_SELECTS = "feature_selects"
+LABEL = "label"
+
+QUANTILE = "quantile"
+BUCKET = "bucket"
+NA_CATEGORY = "else"
+TOTAL = "total"
+POS_COUNT = "pos_count"
+NEG_COUNT = "neg_count"
+POS_RATE = "pos_rate"
+NEG_RATE = "neg_rate"
+WOE = "woe"
+IV = "iv"
+CATEGORY = "category"
+FEATURE = "feature"
+BIN_COUNT = "bin_count"
+BINS = "bins"
+RIGHT = "right"
+ELSE_BIN = "else_bin"
 
 
-def binning(
-    df, feature, label, pos_label, bins, binning_method
-) -> [
-    woe_binning_pb2.WoeBinningReport.VariableBinningResult,
-    woe_binning_pb2.WoeBinningRule.Rule,
-]:
-    if binning_method == "quantile":
+def binning(df, feature, label, pos_label, bins, binning_method) -> [dict, dict]:
+    if binning_method == QUANTILE:
         out = pandas.qcut(x=df[feature], q=bins, duplicates="drop")
-    elif binning_method == "bucket":
+    elif binning_method == BUCKET:
         out = pandas.cut(x=df[feature], bins=bins, duplicates="drop")
     else:
-        raise Exception(f"unsupported binning_method {binning_method}")
+        raise RuntimeError(f"unsupported binning_method {binning_method}")
 
-    label_filed = df[label]
+    label_field = df[label]
+    # convert pos_label according to label_field type
+    pos_label = str(pandas.Series([pos_label], dtype=label_field.dtype)[0])
 
-    if label_filed.dtype == "float64":
-        label_filed = label_filed.astype(np.int64)
-
-    count = len(out.values.categories)
+    bin_count = len(out.cat.categories)
     # add else category if exist `nan` field
     has_nan = df[feature].isnull().values.any()
     if has_nan:
-        out = out.values.add_categories("else")
-        out = out.fillna("else")
-        categories = out.categories
-    else:
-        categories = out.values.categories
+        out = out.cat.add_categories([NA_CATEGORY])
+        out = out.fillna(NA_CATEGORY)
 
-    ret = pandas.crosstab(index=out, columns=label_filed, dropna=False)
+    categories = out.cat.categories
+    ret = pandas.crosstab(index=out, columns=label_field, dropna=False)
     ret.columns = ret.columns.astype(str)
-    ret["total"] = ret.sum(axis=1)
-    ret["pos"] = ret.get(pos_label, 0)
-    ret["neg"] = ret["total"] - ret["pos"]
+    ret[TOTAL] = ret.sum(axis=1)
+    ret[POS_COUNT] = ret.get(pos_label, 0)
+    ret[NEG_COUNT] = ret[TOTAL] - ret[POS_COUNT]
 
     # just keep consistent with nebula
-    # to avoid `np.log(ret["pos_rate"] / ret["neg_rate"])` is -np.inf:
-    # all the zeros in ret["pos"] will be filled with 0.5, so as ret["neg"]
-    ret["pos_rate"] = ret["pos"].astype("float64")
-    ret["neg_rate"] = ret["neg"].astype("float64")
-    ret.loc[(ret["pos_rate"] < 1), "pos_rate"] = 0.5
-    ret.loc[(ret["neg_rate"] < 1), "neg_rate"] = 0.5
-    ret["pos_rate"] = (ret["pos_rate"]) / ret["pos"].sum()
-    ret["neg_rate"] = (ret["neg_rate"]) / ret["neg"].sum()
+    # to avoid `np.log(ret[POS_RATE] / ret[NEG_RATE])` is -np.inf:
+    # all the zeros in ret[POS_COUNT] will be filled with 0.5, so as ret[NEG_COUNT]
+    ret[POS_RATE] = ret[POS_COUNT].astype("float64")
+    ret[NEG_RATE] = ret[NEG_COUNT].astype("float64")
+    ret.loc[(ret[POS_RATE] < 1), POS_RATE] = 0.5
+    ret.loc[(ret[NEG_RATE] < 1), NEG_RATE] = 0.5
+    ret[POS_RATE] = (ret[POS_RATE]) / ret[POS_RATE].sum()
+    ret[NEG_RATE] = (ret[NEG_RATE]) / ret[NEG_RATE].sum()
 
-    ret["woe"] = np.log(ret["pos_rate"] / ret["neg_rate"])
-    ret["iv"] = (ret["pos_rate"] - ret["neg_rate"]) * ret["woe"]
-    ret["cat"] = categories
-    iv = ret["iv"].sum()
+    ret[WOE] = np.log(ret[POS_RATE] / ret[NEG_RATE])
+    ret[IV] = (ret[POS_RATE] - ret[NEG_RATE]) * ret[WOE]
+    ret[CATEGORY] = categories
+    iv = ret[IV].sum()
 
-    result = woe_binning_pb2.WoeBinningReport.VariableBinningResult()
-    rule = woe_binning_pb2.WoeBinningRule.Rule()
-    result.feature = feature
-    result.bin_count = count
-    result.iv = iv
-    rule.feature = feature
-    # else bin used to store abnormal case
-    else_bin = rule.else_bin
+    # output report and rule
+    report = dict()
+    report[FEATURE] = feature
+    report[BIN_COUNT] = bin_count
+    report[IV] = iv
+    report_bins = list()
+
+    rule = dict()
+    rule[FEATURE] = feature
+    rule_bins = list()
 
     for _, row in ret.iterrows():
         # report
-        bin = result.bins.add()
-        bin.label = str(row["cat"])
-        bin.woe = row["woe"]
-        bin.iv = row["iv"]
-        bin.total_count = row["total"]
-        bin.positive_count = row["pos"]
+        report_bin = dict()
+        report_bin[LABEL] = str(row[CATEGORY])
+        report_bin[WOE] = row[WOE]
+        report_bin[IV] = row[IV]
+        report_bin[TOTAL] = row[TOTAL]
+        report_bin[POS_COUNT] = row[POS_COUNT]
+        report_bins.append(report_bin)
         # rule
-        if row["cat"] != "else":
-            rule_bin = rule.bins.add()
-            rule_bin.right = row["cat"].right
-            rule_bin.woe = row["woe"]
+        if row[CATEGORY] != NA_CATEGORY:
+            rule_bin = dict()
+            rule_bin[RIGHT] = row[CATEGORY].right
+            rule_bin[WOE] = row[WOE]
+            rule_bins.append(rule_bin)
         else:
-            else_bin.woe = row["woe"]
+            rule_else_bin = dict()
+            rule_else_bin[WOE] = row[WOE]
+            rule[ELSE_BIN] = rule_else_bin
 
-    # if not contain NaN, result only add else bin with all other fields filled with 0
+    # if not contain NaN, report only add else bin with all other fields filled with 0
     if not has_nan:
-        bin = result.bins.add()
-        bin.label = "else"
+        report_bin = dict()
+        report_bin[LABEL] = NA_CATEGORY
+        report_bin[WOE] = 0
+        report_bin[IV] = 0
+        report_bin[TOTAL] = 0
+        report_bin[POS_COUNT] = 0
+        report_bins.append(report_bin)
 
-    return result, rule
+    report[BINS] = report_bins
+    rule[BINS] = rule_bins
+
+    return report, rule
 
 
-def run_woe_binning(config_json: str):
+def run_woe_binning(task_config: dict):
     logging.info("Running woe binning...")
 
-    task_config = task_pb2.TaskConfig()
-    json_format.Parse(config_json, task_config)
-    assert task_config.app_type == "OP_WOE_BINNING", "App type is not 'OP_WOE_BINNING'"
-    assert len(task_config.inputs) == 1, "WOE binning should has only 1 input"
-    assert len(task_config.outputs) == 1, "WOE binning should has only 1  output"
     assert (
-        len(task_config.inputs[0].schema.features) > 0
+        task_config[common.COMPONENT_NAME] == COMPONENT_NAME
+    ), f"Component name should be {COMPONENT_NAME}, but got {task_config[common.COMPONENT_NAME]}"
+
+    inputs = task_config[common.INPUTS]
+    outputs = task_config[common.OUTPUTS]
+
+    assert len(inputs) == 1, f"{COMPONENT_NAME} should have only 1 input"
+    assert len(outputs) == 1, f"{COMPONENT_NAME} should have only 1 output"
+    assert (
+        len(inputs[0][common.SCHEMA][common.FEATURES]) > 0
     ), "features should not be empty"
     # deal input data
     logging.info("Dealing input data...")
-    df = common.gen_data_frame(task_config.inputs[0])
-    params = woe_binning_pb2.WoeBinningParams()
-    task_config.params.Unpack(params)
+    df = common.gen_data_frame(inputs[0])
 
-    feature_selects = params.feature_selects[:]
-    labels = task_config.inputs[0].schema.labels[:]
+    feature_selects = inputs[0][FEATURE_SELECTS]
+    labels = inputs[0][common.SCHEMA][common.LABELS]
+    assert len(labels) == 1, f"{COMPONENT_NAME} inputs should have only 1 label"
 
-    feature_binning_confs = []
-    if len(params.feature_binning_confs) == 1:
-        for feature in feature_selects:
-            conf = woe_binning_pb2.WoeBinningParams.FeatureBinningConf()
-            conf.CopyFrom(params.feature_binning_confs[0])
-            conf.feature = feature
-            feature_binning_confs.append(conf)
-    else:
-        feature_binning_confs = params.feature_binning_confs
-    assert len(feature_binning_confs) == len(
-        feature_selects
-    ), "length of feature_binning_confs should be 1 or equal to the length of feature_selects"
+    binning_method = task_config[BINNING_METHOD]
+    positive_label = task_config[POSITIVE_LABEL]
+    bin_num = task_config[BIN_NUM]
 
-    report = woe_binning_pb2.WoeBinningReport()
-    rules = woe_binning_pb2.WoeBinningRule()
-    for feature_binning_conf in feature_binning_confs:
-        ret, rule = binning(
+    reports = list()
+    rules = list()
+    for feature in feature_selects:
+        report, rule = binning(
             df,
-            feature_binning_conf.feature,
+            feature,
             labels[0],
-            params.positive_label,
-            feature_binning_conf.n_divide,
-            feature_binning_conf.binning_method,
+            positive_label,
+            bin_num,
+            binning_method,
         )
-        report.variable_ivs.append(ret)
-        rules.rules.append(rule)
+        reports.append(report)
+        rules.append(rule)
 
-    rule_json = json_format.MessageToJson(
-        rules,
-        preserving_proto_field_name=True,
-        including_default_value_fields=True,
-        indent=0,
-    )
-    with open(task_config.outputs[0].data_path, "w") as rule_f:
-        rule_f.write(rule_json)
+    with open(outputs[0][common.DATA_PATH], "w") as rule_f:
+        json.dump(rules, rule_f)
 
 
 def main():
     assert len(sys.argv) == 2, f"Wrong arguments number: {len(sys.argv)}"
     # load task_config json
-    config_path = sys.argv[1]
-    logging.info("Reading config file...")
-    with open(config_path, "r") as config_f:
-        config_json = config_f.read()
-        logging.debug(f"Configurations: {config_json}")
-        run_woe_binning(config_json)
+    task_config_path = sys.argv[1]
+    logging.info("Reading task config file...")
+    with open(task_config_path, "r") as task_config_f:
+        task_config = json.load(task_config_f)
+        logging.debug(f"Configurations: {task_config}")
+        run_woe_binning(task_config)
 
 
 """
-This app is expected to be launched by app framework via running a subprocess
-`python3 woe_bining.py config`. Before launching the subprocess, the app framework will
-firstly generate a config file which is a json file containing all the required
-parameters and is serialized from the task.proto. Currently we do not handle any
-errors/exceptions in this file as the outer app framework will capture the stderr
+This app is expected to be launched by app framework via running a subprocess 
+`python3 woe_bining.py config`. Before launching the subprocess, the app framework will 
+firstly generate a config file which is a json file containing all the required 
+parameters and is serialized from the task.proto. Currently we do not handle any 
+errors/exceptions in this file as the outer app framework will capture the stderr 
 and stdout.
 """
 if __name__ == "__main__":
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    # TODO set log level
+    logging.basicConfig(
+        stream=sys.stdout,
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
     main()

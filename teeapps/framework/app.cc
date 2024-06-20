@@ -19,9 +19,10 @@
 #include "absl/strings/str_split.h"
 #include "cppcodec/base64_rfc4648.hpp"
 #include "spdlog/spdlog.h"
-#include "yacl/crypto/base/hash/hash_utils.h"
-#include "yacl/crypto/base/key_utils.h"
+#include "yacl/crypto/hash/hash_utils.h"
+#include "yacl/crypto/key_utils.h"
 
+#include "teeapps/component/component_list.h"
 #include "teeapps/framework/constants.h"
 #include "teeapps/framework/subprocess.h"
 #include "teeapps/kuscia/kuscia_task_config.h"
@@ -51,8 +52,8 @@ constexpr char kPyPath[] = "/home/teeapp/python/bin/python3";
 constexpr char kOcclumPyPath[] = "/bin/python3";
 
 std::string GenCmd(const std::string& component_name, const std::string& plat) {
-  const auto py_name = teeapps::framework::comp_py_map.find(component_name);
-  YACL_ENFORCE(py_name != teeapps::framework::comp_py_map.end(),
+  const auto py_name = teeapps::component::comp_py_map.find(component_name);
+  YACL_ENFORCE(py_name != teeapps::component::comp_py_map.end(),
                "can not find py_name for {}", component_name);
   if (plat == teeapps::framework::kPlatSim ||
       plat == teeapps::framework::kPlatTdx ||
@@ -102,13 +103,13 @@ App::App(const std::string& plat, const std::string& app_mode,
     YACL_THROW("app mode {} not support", app_mode_);
   }
 
-  const auto comp_def = teeapps::framework::COMP_DEF_LIST.find(
-      teeapps::framework::GenCompFullName(node_eval_param_.domain(),
-                                          node_eval_param_.name(),
-                                          node_eval_param_.version()));
+  const auto comp_def =
+      teeapps::component::COMP_DEF_MAP.find(teeapps::component::GenCompFullName(
+          node_eval_param_.domain(), node_eval_param_.name(),
+          node_eval_param_.version()));
   YACL_ENFORCE(
-      comp_def != teeapps::framework::COMP_DEF_LIST.end(),
-      "can not find corresponding Component definition in COMP_DEF_LIST");
+      comp_def != teeapps::component::COMP_DEF_MAP.end(),
+      "can not find corresponding Component definition in COMP_DEF_MAP");
   component_def_ = comp_def->second;
 
   auto [pk_buf, sk_buf] = yacl::crypto::GenRsaKeyPairToPemBuf(kRsaBitLength);
@@ -150,11 +151,7 @@ void App::GetInputDataKeys(
     std::unordered_map<std::string, std::string>& data_keys_map) const {
   secretflowapis::v2::sdc::capsule_manager::ResourceRequest resource_request;
   resource_request.set_initiator_party_id(tee_task_config_.task_initiator_id());
-  const auto op_name =
-      teeapps::framework::comp_op_map.find(node_eval_param_.name());
-  YACL_ENFORCE(op_name != teeapps::framework::comp_op_map.end(),
-               "op_name corresponding {} not found", node_eval_param_.name());
-  resource_request.set_op_name(op_name->second);
+  resource_request.set_op_name(node_eval_param_.name());
   resource_request.set_scope(tee_task_config_.scope());
 
   for (const auto& input : node_eval_param_.inputs()) {

@@ -1,11 +1,11 @@
 # Copyright 2023 Ant Group Co., Ltd.
-#
+# 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+# 
 #   http://www.apache.org/licenses/LICENSE-2.0
-#
+# 
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,7 @@ targets:
         linkname: python3
   # python packages
   - target: /opt
-    copy:
+    copy: 
       - dirs:
           - /home/teeapp/python-occlum
   - target: /
@@ -30,18 +30,19 @@ targets:
         dirs:
           - secretflow
           - teeapps
-        files:
-          - biclassifier_evaluation.py
-          - dataset_filter.py
-          - dataset_split.py
+        files: 
+          - biclassification_eval.py
+          - feature_filter.py
+          - train_test_split.py
           - lr.py
           - predict.py
           - prediction_bias_eval.py
           - psi.py
-          - stats_corr.py
-          - stats_vif.py
+          - pearsonr.py
+          - vif.py
           - table_statistics.py
           - woe_binning.py
           - woe_substitution.py
           - xgb.py
+          - lgbm.py
           - __init__.py

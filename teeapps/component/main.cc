@@ -20,26 +20,13 @@
 #include <string>
 #include <vector>
 
-#include "feature/woe_binning_component.h"
-#include "feature/woe_substitution_component.h"
-#include "ml/eval/biclassification_component.h"
-#include "ml/eval/prediction_bias_component.h"
-#include "ml/predict/lr_component.h"
-#include "ml/predict/xgb_component.h"
-#include "ml/train/lr_component.h"
-#include "ml/train/xgb_component.h"
-#include "preprocessing/feature_filter_component.h"
-#include "preprocessing/psi_component.h"
-#include "preprocessing/train_test_split_component.h"
+#include "component_list.h"
 #include "rapidjson/document.h"
 #include "rapidjson/pointer.h"
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/schema.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
-#include "stats/pearsonr_component.h"
-#include "stats/table_statistics_component.h"
-#include "stats/vif_component.h"
 
 using namespace teeapps::component;
 
@@ -60,40 +47,10 @@ void generate_comp_list() {
   COMP_LIST->set_version(COMP_LIST_VERSION);
 
   // add components
-  // preprocessing
-  COMP_LIST->mutable_comps()->Add(secretflow::spec::v1::ComponentDef(
-      *PsiComponent::GetInstance().Definition()));
-  COMP_LIST->mutable_comps()->Add(secretflow::spec::v1::ComponentDef(
-      *FeatureFilterComponent::GetInstance().Definition()));
-  COMP_LIST->mutable_comps()->Add(secretflow::spec::v1::ComponentDef(
-      *TrainTestSplitComponent::GetInstance().Definition()));
-  // stats
-  COMP_LIST->mutable_comps()->Add(secretflow::spec::v1::ComponentDef(
-      *PearsonrComponent::GetInstance().Definition()));
-  COMP_LIST->mutable_comps()->Add(secretflow::spec::v1::ComponentDef(
-      *TableStatisticsComponent::GetInstance().Definition()));
-  COMP_LIST->mutable_comps()->Add(secretflow::spec::v1::ComponentDef(
-      *VifComponent::GetInstance().Definition()));
-  // feature
-  COMP_LIST->mutable_comps()->Add(secretflow::spec::v1::ComponentDef(
-      *WoeBinningComponent::GetInstance().Definition()));
-  COMP_LIST->mutable_comps()->Add(secretflow::spec::v1::ComponentDef(
-      *WoeSubstitutionComponent::GetInstance().Definition()));
-  // ml/eval
-  COMP_LIST->mutable_comps()->Add(secretflow::spec::v1::ComponentDef(
-      *BiclassificationComponent::GetInstance().Definition()));
-  COMP_LIST->mutable_comps()->Add(secretflow::spec::v1::ComponentDef(
-      *PredictionBiasComponent::GetInstance().Definition()));
-  // ml/predict
-  COMP_LIST->mutable_comps()->Add(secretflow::spec::v1::ComponentDef(
-      *XgbPredComponent::GetInstance().Definition()));
-  COMP_LIST->mutable_comps()->Add(secretflow::spec::v1::ComponentDef(
-      *LrPredComponent::GetInstance().Definition()));
-  // ml/train
-  COMP_LIST->mutable_comps()->Add(secretflow::spec::v1::ComponentDef(
-      *XgbTrainComponent::GetInstance().Definition()));
-  COMP_LIST->mutable_comps()->Add(secretflow::spec::v1::ComponentDef(
-      *LrTrainComponent::GetInstance().Definition()));
+  for (auto it = COMP_DEF_MAP.begin(); it != COMP_DEF_MAP.end(); it++) {
+    COMP_LIST->mutable_comps()->Add(
+        secretflow::spec::v1::ComponentDef(it->second));
+  }
 }
 
 void fill_value(rapidjson::Document& doc, const std::string& key,

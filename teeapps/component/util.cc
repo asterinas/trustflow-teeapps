@@ -18,12 +18,9 @@ namespace teeapps {
 namespace component {
 
 bool check_io_def(const secretflow::spec::v1::IoDef* io_def) {
+  const auto& allowed_types = DistDataType::get_all_types();
   for (const auto& type : io_def->types()) {
-    if (type != DistDataType::INDIVIDUAL_TABLE &&
-        type != DistDataType::REPORT && type != DistDataType::XGB_MODEL &&
-        type != DistDataType::LR_MODEL &&
-        type != DistDataType::VERTICAL_TABLE &&
-        type != DistDataType::WOE_RUNNING_RULE) {
+    if (allowed_types.find(type) == allowed_types.end()) {
       return false;
     }
   }

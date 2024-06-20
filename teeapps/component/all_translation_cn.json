@@ -3,9 +3,9 @@
     "TrustedFlow": "TrustedFlow",
     "First-party TrustedFlow components.": "官方TrustedFlow组件"
   },
-  "feature/vert_woe_binning:0.0.1": {
+  "feature/woe_binning:0.0.1": {
     "feature": "特征工程",
-    "vert_woe_binning": "WOE分箱",
+    "woe_binning": "WOE分箱",
     "Generate Weight of Evidence (WOE) binning rules for individual datasets.": "为数据集生成 Weight of Evidence (WOE) 分箱规则",
     "0.0.1": "0.0.1",
     "binning_method": "分箱方式",
@@ -23,9 +23,9 @@
     "woe_rule": "WOE 规则",
     "Output WOE rule.": "输出 WOE 规则"
   },
-  "feature/vert_woe_substitution:0.0.1": {
+  "feature/woe_substitution:0.0.1": {
     "feature": "特征工程",
-    "vert_woe_substitution": "WOE转换",
+    "woe_substitution": "WOE转换",
     "Substitute datasets' value by WOE substitution rules.": "根据WOE分箱规则替换数据集的值",
     "0.0.1": "0.0.1",
     "input_data": "输入数据",
@@ -278,5 +278,57 @@
     "Input table.": "输入表",
     "report": "报告",
     "Output table statistics report.": "输出全表统计结果表"
+  },
+  "ml.train/lgbm_train:0.0.1": {
+    "ml.train": "模型训练",
+    "lgbm_train": "LightGBM训练",
+    "LightGBM train component for individual dataset.": "为独立数据集提供LightGBM训练能力的组件",
+    "0.0.1": "0.0.1",
+    "n_estimators": "训练轮数",
+    "Number of boosted trees to fit.": "训练轮数",
+    "objective": "学习目标",
+    "Specify the learning objective.": "指定学习目标（二分类或回归）",
+    "boosting_type": "基学习类型",
+    "Boosting type.": "基学习类型",
+    "learning_rate": "学习率",
+    "Learning rate.": "学习率",
+    "num_leaves": "叶子数",
+    "Max number of leaves in one tree.": "一棵树中的最大叶子数量",
+    "train_dataset": "训练数据集",
+    "Input table.": "输入的训练数据集",
+    "ids": "id列",
+    "Id columns will not be trained.": "指定的id列不会作为训练的特征",
+    "label": "标签列",
+    "Label column.": "标签列",
+    "output_model": "输出模型",
+    "Output model.": "输出模型"
+  },
+  "ml.predict/lgbm_predict:0.0.1": {
+    "ml.predict": "模型预测",
+    "lgbm_predict": "LightGBM预测",
+    "Predict using the lgbm model.": "使用 LightGBM 模型进行预测",
+    "0.0.1": "0.0.1",
+    "pred_name": "预测结果列名",
+    "Column name for predictions.": "预测结果列名",
+    "save_label": "保存标签列",
+    "Whether or not to save real label column into output pred table. If true, input feature_dataset must contain label column.": "是否将真实的标签列保存到输出预测文件中；如果为 true，则输入feature_dataset必须包含标签列",
+    "label_name": "标签列名",
+    "Column name for label.": "需要保存的标签列名",
+    "save_id": "保存id列",
+    "Whether to save id column into output pred table. If true, input feature_dataset must contain id column.": "是否将 id 列保存到输出预测表中；如果为 true，则输入feature_dataset必须包含 id 列",
+    "id_name": "id列名",
+    "Column name for id.": "需要保存的id列名",
+    "col_names": "额外列名",
+    "Column names into output pred table.": "需要额外输出到预测表的列名",
+    "model": "模型",
+    "Input model.": "输入模型",
+    "feature_dataset": "特征数据集",
+    "Input feature dataset.": "输入数据表",
+    "ids": "Id列",
+    "Id columns.": "Id列",
+    "label": "标签列",
+    "Label column.": "标签列",
+    "pred": "预测",
+    "Output prediction.": "输出预测结果表"
   }
 }

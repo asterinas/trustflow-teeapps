@@ -1,13 +1,13 @@
 #!/bin/bash
 #
 # Copyright 2023 Ant Group Co., Ltd.
-#
+# 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+# 
 #   http://www.apache.org/licenses/LICENSE-2.0
-#
+# 
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,14 +52,13 @@ cp -rL $workspace_dir/bazel-bin/teeapps/biz/psi/psi.runfiles/sf_spec/secretflow 
 # copy common
 mkdir -p teeapps/biz/common/
 cp $workspace_dir/teeapps/biz/common/common.py teeapps/biz/common/
-cp -rL $workspace_dir/bazel-bin/teeapps/biz/psi/psi.runfiles/teeapps/teeapps/proto teeapps/
 
 cd $target_dir/occlum
 
 # Initailize occlum workspace
 [ -d occlum_instance ] || occlum new occlum_instance
 
-[ -d $python_dir ] || conda create --prefix $python_dir -y python=3.8.10 pandas protobuf scikit-learn xgboost statsmodels
+[ -d $python_dir ] || conda create --prefix $python_dir -y python=3.8.10 pandas protobuf scikit-learn xgboost lightgbm statsmodels
 if [ ! -d $python_dir ]; then
   echo "Error: cannot stat '$python_dir' directory"
   exit 1

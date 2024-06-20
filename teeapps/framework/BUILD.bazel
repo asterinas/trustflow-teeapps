@@ -30,22 +30,22 @@ teeapps_cc_library(
     srcs = ["app.cc"],
     hdrs = ["app.h"],
     deps = [
+        "//teeapps/component:component_list",
         "//teeapps/framework:capsule_manager_client",
         "//teeapps/framework:constants",
         "//teeapps/framework:subprocess",
         "//teeapps/kuscia:kuscia_client",
         "//teeapps/kuscia:kuscia_task_config",
         "//teeapps/local:local_task_config",
-        "//teeapps/proto:cc_sf_apis_grpc",
-        "//teeapps/proto:cc_sf_spec_proto",
-        "//teeapps/proto:cc_task_proto",
         "//teeapps/utils:crypto_util",
         "//teeapps/utils:data_uri_util",
         "//teeapps/utils:io_util",
         "//teeapps/utils:output_dist_data_util",
         "//teeapps/utils:ra_util",
         "//teeapps/utils:task_config_util",
-        "@yacl//yacl/crypto/base:key_utils",
+        "@sf_apis//:cc_sf_apis_grpc",
+        "@sf_spec//:cc_sf_spec_proto",
+        "@yacl//yacl/crypto:key_utils",
     ],
 )
 
@@ -55,23 +55,19 @@ teeapps_cc_library(
     hdrs = ["capsule_manager_client.h"],
     deps = [
         "//teeapps/framework:constants",
-        "//teeapps/proto:cc_sf_apis_grpc",
         "//teeapps/utils:crypto_util",
         "//teeapps/utils:json2pb",
         "//teeapps/utils:ra_util",
         "@com_github_grpc_grpc//:grpc++",
         "@cppcodec",
-        "@yacl//yacl/crypto/utils:rand",
+        "@sf_apis//:cc_sf_apis_grpc",
+        "@yacl//yacl/crypto/rand",
     ],
 )
 
 teeapps_cc_library(
     name = "constants",
     hdrs = ["constants.h"],
-    deps = [
-        "//teeapps/component:component_list",
-        "//teeapps/proto:cc_sf_spec_proto",
-    ],
 )
 
 teeapps_cc_binary(

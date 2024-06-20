@@ -24,10 +24,9 @@ cc_library(
     hdrs = [
         "util.h",
     ],
-    deps =
-        [
-            "//teeapps/proto:cc_sf_spec_proto",
-        ],
+    deps = [
+        "@sf_spec//:cc_sf_spec_proto",
+    ],
 )
 
 cc_library(
@@ -38,10 +37,9 @@ cc_library(
     hdrs = [
         "eval_param_reader.h",
     ],
-    deps =
-        [
-            ":util",
-        ],
+    deps = [
+        ":util",
+    ],
 )
 
 cc_library(
@@ -52,28 +50,34 @@ cc_library(
     hdrs = [
         "component.h",
     ],
-    deps =
-        [
-            ":eval_param_reader",
-        ],
+    deps = [
+        ":eval_param_reader",
+    ],
+)
+
+cc_library(
+    name = "component_defs",
+    srcs = glob([
+        "*/*.cc",
+        "ml/*/*.cc",
+    ]),
+    hdrs = glob([
+        "*/*.h",
+        "ml/*/*.h",
+    ]),
+    deps = [
+        ":component",
+    ],
 )
 
 cc_library(
     name = "component_list",
-    srcs =
-        glob([
-            "*/*.cc",
-            "ml/*/*.cc",
-        ]),
-    hdrs =
-        glob([
-            "*/*.h",
-            "ml/*/*.h",
-        ]),
-    deps =
-        [
-            ":component",
-        ],
+    hdrs = ["component_list.h"],
+    deps = [
+        ":component_defs",
+        "@com_google_absl//absl/strings",
+        "@sf_spec//:cc_sf_spec_proto",
+    ],
 )
 
 cc_binary(
@@ -81,9 +85,9 @@ cc_binary(
     srcs = [
         "main.cc",
     ],
-    deps =
-        [
-            ":component_list",
-            "@com_github_rapidjson//:rapidjson",
-        ],
+    deps = [
+        ":component_defs",
+        ":component_list",
+        "@com_github_rapidjson//:rapidjson",
+    ],
 )

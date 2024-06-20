@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@com_github_grpc_grpc//bazel:python_rules.bzl", "py_proto_library")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 
 package(default_visibility = ["//visibility:public"])
@@ -21,5 +22,19 @@ proto_library(
     srcs = glob(["secretflow/spec/v1/*.proto"]),
     deps = [
         "@com_google_protobuf//:any_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "cc_sf_spec_proto",
+    deps = [
+        ":sf_spec_proto",
+    ],
+)
+
+py_proto_library(
+    name = "py_sf_spec_proto",
+    deps = [
+        ":sf_spec_proto",
     ],
 )

@@ -13,22 +13,29 @@
 # limitations under the License.
 
 
+import csv
 import logging
-import math
-import os
-import sys
 from typing import Literal
 
 import pandas
-
-# The following packages will be generated automatically by scripts
-# when building occlum workspace
-from teeapps.proto import task_pb2
 from secretflow.spec.v1 import data_pb2
 
-DEFAULT_FILE_SIZE_LIMIT_IN_BYTES = 1024 * 1000 * 500
+COMPONENT_NAME = "component_name"
+INPUTS = "inputs"
+OUTPUTS = "outputs"
+DATA_PATH = "data_path"
+DATA_SCHEMA_PATH = "data_schema_path"
+SCHEMA = "schema"
+IDS = "ids"
+FEATURES = "features"
+LABELS = "labels"
+ID_TYPES = "id_types"
+FEATURE_TYPES = "feature_types"
+LABEL_TYPES = "label_types"
+
 TABLE_SCHEMA_STRING_TYPE = "str"
 TABLE_SCHEMA_FLOAT_DEFAULT_TYPE = "float64"
+TABLE_SCHEMA_BOOL_TYPE = "bool"
 TABLE_SCHEMA_FLOAT_TYPE_LIST = ["float16", "float32", "float64", "float"]
 TABLE_SCHEMA_INT_TYPE_LIST = [
     "int8",
@@ -41,14 +48,6 @@ TABLE_SCHEMA_INT_TYPE_LIST = [
     "uint64",
     "int",
 ]
-
-
-def is_str_numberic(s: str) -> bool:
-    try:
-        val = float(s)
-    except:
-        return False
-    return True
 
 
 def sf_to_pd_type(
@@ -74,7 +73,7 @@ def sf_to_pd_type(
         return "int64"
     elif sf_type in TABLE_SCHEMA_FLOAT_TYPE_LIST:
         return "float64"
-    elif sf_type in ["bool"]:
+    elif sf_type == TABLE_SCHEMA_BOOL_TYPE:
         return "bool"
     return "object"
 
@@ -86,82 +85,99 @@ def pd_type_to_sf(pd_dtype: str) -> str:
         return pd_dtype
 
 
-def append_table_schema(
-    schema: data_pb2.TableSchema, task_input: task_pb2.TaskConfig.Input
-) -> None:
-    schema.ids.extend(task_input.schema.ids)
-    schema.features.extend(task_input.schema.features)
-    schema.labels.extend(task_input.schema.labels)
-    schema.id_types.extend(task_input.schema.id_types)
-    schema.feature_types.extend(task_input.schema.feature_types)
-    schema.label_types.extend(task_input.schema.label_types)
+def append_table_schema(dst_schema: data_pb2.TableSchema, src_schema: dict) -> None:
+    dst_schema.ids.extend(src_schema[IDS])
+    dst_schema.features.extend(src_schema[FEATURES])
+    dst_schema.labels.extend(src_schema[LABELS])
+    dst_schema.id_types.extend(src_schema[ID_TYPES])
+    dst_schema.feature_types.extend(src_schema[FEATURE_TYPES])
+    dst_schema.label_types.extend(src_schema[LABEL_TYPES])
 
 
-def get_cols_in_schema(schema: data_pb2.TableSchema) -> list:
+def get_cols_in_schema(schema: dict) -> list:
     cols = []
-    cols.extend(list(schema.ids))
-    cols.extend(list(schema.features))
-    cols.extend(list(schema.labels))
+    cols.extend(list(schema[IDS]))
+    cols.extend(list(schema[FEATURES]))
+    cols.extend(list(schema[LABELS]))
     return cols
 
 
-def get_col_names(task_input: task_pb2.TaskConfig.Input, file_path: str = None) -> list:
-    data_path = file_path if file_path is not None else task_input.data_path
-    with open(data_path, "r") as reader:
-        line = reader.readline()
-        return line.strip("\n ").split(",")
+def get_dialect(csv_file):
+    with open(csv_file, "r", newline="") as file:
+        sample = file.readline() + file.readline()
+        try:
+            dialect = csv.Sniffer().sniff(sample)
+        except csv.Error:
+            logging.warn(
+                "Can not determine dialect with csv sniffer. Use default excel dialect instead."
+            )
+            dialect = csv.excel()
+    return dialect
 
 
-def get_col_types(task_input: task_pb2.TaskConfig.Input, col_names: list) -> list:
+def get_col_names(task_input: dict, delimiter: str, file_path: str = None) -> list:
+    data_path = file_path if file_path else task_input[DATA_PATH]
+    assert data_path, "Data path is empty."
+
+    df = pandas.read_csv(data_path, delimiter=delimiter, nrows=0)
+    return df.columns.to_list()
+
+
+def get_col_types(task_input: dict, col_names: list) -> list:
     col_types = []
     for col_name in col_names:
-        if col_name in task_input.schema.ids:
+        if col_name in task_input[SCHEMA][IDS]:
             col_types.append(
-                task_input.schema.id_types[list(task_input.schema.ids).index(col_name)]
-            )
-        elif col_name in task_input.schema.features:
-            col_types.append(
-                task_input.schema.feature_types[
-                    list(task_input.schema.features).index(col_name)
+                task_input[SCHEMA][ID_TYPES][
+                    list(task_input[SCHEMA][IDS]).index(col_name)
                 ]
             )
-        elif col_name in task_input.schema.labels:
+        elif col_name in task_input[SCHEMA][FEATURES]:
             col_types.append(
-                task_input.schema.label_types[
-                    list(task_input.schema.labels).index(col_name)
+                task_input[SCHEMA][FEATURE_TYPES][
+                    list(task_input[SCHEMA][FEATURES]).index(col_name)
+                ]
+            )
+        elif col_name in task_input[SCHEMA][LABELS]:
+            col_types.append(
+                task_input[SCHEMA][LABEL_TYPES][
+                    list(task_input[SCHEMA][LABELS]).index(col_name)
                 ]
             )
         else:
-            raise Exception(f"{col_name} not found in schema")
+            raise RuntimeError(f"{col_name} not found in schema")
     return col_types
 
 
 # only used by format_file_schema
-def col_type_to_float(task_input: task_pb2.TaskConfig.Input, col_name: str) -> None:
-    if col_name in task_input.schema.ids:
-        task_input.schema.id_types[
-            list(task_input.schema.ids).index(col_name)
+def col_type_to_float(task_input: dict, col_name: str) -> None:
+    if col_name in task_input[SCHEMA][IDS]:
+        task_input[SCHEMA][ID_TYPES][
+            list(task_input[SCHEMA][IDS]).index(col_name)
         ] = TABLE_SCHEMA_FLOAT_DEFAULT_TYPE
-    elif col_name in task_input.schema.features:
-        task_input.schema.feature_types[
-            list(task_input.schema.features).index(col_name)
+    elif col_name in task_input[SCHEMA][FEATURES]:
+        task_input[SCHEMA][FEATURE_TYPES][
+            list(task_input[SCHEMA][FEATURES]).index(col_name)
         ] = TABLE_SCHEMA_FLOAT_DEFAULT_TYPE
-    elif col_name in task_input.schema.labels:
-        task_input.schema.label_types[
-            list(task_input.schema.labels).index(col_name)
+    elif col_name in task_input[SCHEMA][LABELS]:
+        task_input[SCHEMA][LABEL_TYPES][
+            list(task_input[SCHEMA][LABELS]).index(col_name)
         ] = TABLE_SCHEMA_FLOAT_DEFAULT_TYPE
     else:
-        raise Exception(f"{col_name} not found in schema")
+        raise RuntimeError(f"{col_name} not found in schema")
 
 
 def gen_data_frame(
-    task_input: task_pb2.TaskConfig.Input,
+    task_input: dict,
     file_path: str = None,
     usecols: list = None,
 ) -> pandas.DataFrame:
-    data_path = file_path if file_path is not None else task_input.data_path
+    data_path = file_path if file_path else task_input[DATA_PATH]
+    assert data_path, "Data path is empty."
 
-    col_names = get_col_names(task_input, data_path)
+    dialect = get_dialect(data_path)
+
+    col_names = get_col_names(task_input, dialect.delimiter, data_path)
     col_types = get_col_types(task_input, col_names)
     return pandas.read_csv(
         data_path,
@@ -172,6 +188,7 @@ def gen_data_frame(
         },
         usecols=usecols,
         header=0,
+        delimiter=dialect.delimiter,
     )
 
 
@@ -191,145 +208,47 @@ def gen_output_schema(
             output_schema.labels.append(col)
             output_schema.label_types.append(pd_type_to_sf(str(df[col].dtype)))
         else:
-            raise Exception(f"{col} not found in schema")
+            raise RuntimeError(f"{col} not found in schema")
     return output_schema
 
 
-# only fix problem: change str to float if possible
-def format_file_schema(task_input: task_pb2.TaskConfig.Input, join_key: list) -> int:
-    logging.debug(f"before format_file_schema task input {task_input}")
-    data_path = task_input.data_path
-    col_names = get_col_names(task_input)
-    col_types = get_col_types(task_input, col_names)
-
-    join_fields_size = 0
-
-    can_format_str_to_float = [True for col_name in col_names]
-    with open(data_path, "r") as reader:
-        # line 1 is col name
-        reader.readline()
-        while True:
-            # judge whether the str represents float
-            line = reader.readline()
-            if not line:
-                break
-            values = line.strip("\n ").split(",")
-            for index in range(len(values)):
-                # if col type is str and actual value is not float,
-                # then the col cannot be transfer to float
-                if (
-                    can_format_str_to_float[index]
-                    and col_types[index] == TABLE_SCHEMA_STRING_TYPE
-                    and is_str_numberic(values[index]) != True
-                ):
-                    can_format_str_to_float[index] = False
-                if col_names[index] in join_key:
-                    join_fields_size = join_fields_size + len(values[index])
-
-    # change origin col type
-    for index in range(len(col_names)):
-        if (
-            can_format_str_to_float[index]
-            and col_types[index] == TABLE_SCHEMA_STRING_TYPE
-        ):
-            # change schema in task_input
-            col_type_to_float(task_input, col_names[index])
-    logging.debug(f"after format_file_schema task input {task_input}")
-    return join_fields_size
-
-
 def split_bigfile_into_smallfiles(
-    task_input: task_pb2.TaskConfig.Input,
+    task_input: dict,
     join_key: list,
-    file_size_limit_in_bytes: int = None,
-    total_file_size_in_bytes: int = None,
+    file_num: int,
 ) -> list:
-    data_path = task_input.data_path
-    # calcute small file num
-    file_size_limit_in_bytes = (
-        DEFAULT_FILE_SIZE_LIMIT_IN_BYTES
-        if file_size_limit_in_bytes is None
-        else file_size_limit_in_bytes
-    )
-    file_num = math.ceil(
-        (
-            os.path.getsize(data_path)
-            if total_file_size_in_bytes is None
-            else total_file_size_in_bytes
-        )
-        / file_size_limit_in_bytes
-    )
-    logging.info(f"{data_path} can be split into {file_num} files")
+    data_path = task_input[DATA_PATH]
+    assert data_path, "Data path is empty."
     if file_num == 1:
         return [data_path]
 
     # split big file into small files
     file_names = [data_path + "_" + str(index) for index in range(file_num)]
     file_handles = [open(filename, "w") for filename in file_names]
-    with open(data_path, "r") as reader:
-        # line 1 is col name
-        line = reader.readline()
-        col_names = line.strip("\n ").split(",")
-        col_types = get_col_types(task_input, col_names)
-        # write col name into small files
-        [handle.write(line) for handle in file_handles]
-        while True:
-            line = reader.readline()
-            if not line:
-                break
-            values = line.strip("\n ").split(",")
-            format_values = []
-            for index in range(len(values)):
-                if col_names[index] not in join_key:
-                    continue
-                if col_types[index] in TABLE_SCHEMA_FLOAT_TYPE_LIST:
-                    format_values.append(str(float(values[index])))
-                else:
-                    format_values.append(str(values[index]))
-            file_index = hash(",".join(format_values)) % file_num
-            file_handles[file_index].write(line)
+
+    dialect = get_dialect(data_path)
+
+    col_names = get_col_names(task_input, dialect.delimiter, data_path)
+    join_key_idx = [i for i in range(len(col_names)) if col_names[i] in join_key]
+
+    # write header to every small files
+    header = dialect.lineterminator.join(col_names) + dialect.lineterminator
+    [handle.write(header) for handle in file_handles]
+
+    with open(data_path, "r", newline="") as csv_file:
+        reader = csv.reader(
+            csv_file, delimiter=dialect.delimiter, lineterminator=dialect.lineterminator
+        )
+        # skip header
+        next(reader)
+        for row in reader:
+            file_index = (
+                hash(dialect.lineterminator.join([row[idx] for idx in join_key_idx]))
+                % file_num
+            )
+            file_handles[file_index].write(
+                dialect.lineterminator.join(row) + dialect.lineterminator
+            )
 
     [handle.close() for handle in file_handles]
     return file_names
-
-
-def read_csv_file(
-    task_input: task_pb2.TaskConfig.Input,
-    join_key: list,
-    data_path: str,
-    cond_df: pandas.DataFrame,
-) -> pandas.DataFrame:
-    join_key_index = {join_key[index]: index for index in range(len(join_key))}
-
-    # the order of conf_df.columns is the same as the order of id_fields
-    cond_list = cond_df.values
-
-    # only get data in file which value of id fields is in cond_df[id fields]
-    data_rows = []
-    with open(data_path, "r") as reader:
-        # line 1 is col name
-        line = reader.readline()
-        col_names = line.strip("\n ").split(",")
-        col_types = get_col_types(task_input, col_names)
-        while True:
-            # get value line by line
-            line = reader.readline()
-            if not line:
-                break
-            values = line.strip("\n ").split(",")
-            cond_values = [None] * len(join_key)
-            format_values = []
-
-            for index in range(len(values)):
-                if col_types[index] in TABLE_SCHEMA_FLOAT_TYPE_LIST:
-                    format_values.append(float(values[index]))
-                elif col_types[index] in TABLE_SCHEMA_INT_TYPE_LIST:
-                    format_values.append(int(values[index]))
-                else:
-                    format_values.append(values[index])
-                if col_names[index] in join_key:
-                    cond_values[join_key_index[col_names[index]]] = format_values[-1]
-            if cond_values in cond_list:
-                data_rows.append(format_values)
-
-    return pandas.DataFrame(data_rows, columns=col_names)

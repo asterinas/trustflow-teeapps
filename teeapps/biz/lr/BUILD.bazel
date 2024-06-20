@@ -14,6 +14,8 @@
 
 load("@rules_python//python:defs.bzl", "py_binary", "py_test")
 
+package(default_visibility = ["//visibility:public"])
+
 py_binary(
     name = "lr",
     srcs = [
@@ -21,18 +23,6 @@ py_binary(
     ],
     deps = [
         "//teeapps/biz/common",
-        "//teeapps/proto:py_sf_spec_proto",
-        "//teeapps/proto:py_task_proto",
-    ],
-)
-
-py_test(
-    name = "lr_test",
-    srcs = ["lr_test.py"],
-    data = [
-        "//teeapps/biz/testdata",
-    ],
-    deps = [
-        ":lr",
+        "@sf_spec//:py_sf_spec_proto",
     ],
 )

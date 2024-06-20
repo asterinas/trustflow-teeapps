@@ -28,7 +28,6 @@
 #include "secretflow/spec/v1/report.pb.h"
 #include "secretflowapis/v2/sdc/capsule_manager/capsule_manager.pb.h"
 #include "secretflowapis/v2/teeapps/task_config.pb.h"
-#include "teeapps/proto/task.pb.h"
 
 namespace teeapps {
 namespace framework {
