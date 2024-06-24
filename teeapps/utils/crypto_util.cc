@@ -267,7 +267,7 @@ void EncryptFile(const std::string& source_path, const std::string& dest_path,
 
   // read raw data
   yacl::io::FileInputStream in(source_path);
-  uint32_t file_len = in.GetLength();
+  auto file_len = in.GetLength();
   uint32_t block_header_len =
       kIvLenBytes + kIvFieldBytes + kMacLenBytes + kMacFieldBytes;
   uint32_t block_data_len = kBlockBytes - block_header_len;
