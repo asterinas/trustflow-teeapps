@@ -84,7 +84,9 @@ jobs:
 
             # login docker
             docker login -u secretflow -p ${DOCKER_DEPLOY_TOKEN}
-
+            # login docker - aliyun
+            docker login -u ${ALIYUN_DOCKER_USERNAME} -p ${ALIYUN_DOCKER_PASSWORD} secretflow-registry.cn-hangzhou.cr.aliyuncs.com
+            
             case "$PLATFORM" in
               sim)
                 echo "build and publish in sim mode, version: ${COMMON_VERSION}"

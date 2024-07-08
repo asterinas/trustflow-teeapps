@@ -85,6 +85,7 @@ GREEN="\033[32m"
 NO_COLOR="\033[0m"
 
 DOCKER_REG="secretflow"
+ALIYUN_DOKER_PREFIX="secretflow-registry.cn-hangzhou.cr.aliyuncs.com"
 
 case "$PLATFORM" in
   sim)
@@ -141,14 +142,18 @@ echo -e "Finish building ${GREEN}${IMAGE_TAG}${NO_COLOR}"
 
 if [[ UPLOAD -eq 1 ]]; then
     docker push ${IMAGE_TAG}
+    docker tag ${IMAGE_TAG} ${ALIYUN_DOKER_PREFIX}/${IMAGE_TAG}
+    docker push ${ALIYUN_DOKER_PREFIX}/${IMAGE TAG}
 fi
 
 
 if [[ LATEST -eq 1 ]]; then
     echo -e "Tag ${GREEN}${LATEST_TAG}${NO_COLOR} ..."
     docker tag ${IMAGE_TAG} ${LATEST_TAG}
+    docker tag ${LATEST_TAG} ${ALIYUN_DOKER_PREFIX}/${LATEST_TAG}
     if [[ UPLOAD -eq 1 ]]; then
         echo -e "Push ${GREEN}${LATEST_TAG}${NO_COLOR} ..."
         docker push ${LATEST_TAG}
+        docker push ${ALIYUN_DOKER_PREFIX}/${LATEST_TAG}
     fi
 fi
