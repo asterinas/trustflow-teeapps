@@ -143,7 +143,7 @@ echo -e "Finish building ${GREEN}${IMAGE_TAG}${NO_COLOR}"
 if [[ UPLOAD -eq 1 ]]; then
     docker push ${IMAGE_TAG}
     docker tag ${IMAGE_TAG} ${ALIYUN_DOKER_PREFIX}/${IMAGE_TAG}
-    docker push ${ALIYUN_DOKER_PREFIX}/${IMAGE TAG}
+    docker push ${ALIYUN_DOKER_PREFIX}/${IMAGE_TAG}
 fi
 
 
