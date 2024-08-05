@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM secretflow/trustedflow-dev-ubuntu22.04:latest as builder
+FROM secretflow/trustflow-dev-ubuntu22.04:latest as builder
 
 WORKDIR /home/admin/dev
 
@@ -25,7 +25,7 @@ COPY scripts/build_tdx.sh ./scripts/build_tdx.sh
 RUN bash ./scripts/build_tdx.sh
 
 
-FROM secretflow/trustedflow-release-ubuntu22.04:latest
+FROM secretflow/trustflow-release-ubuntu22.04:latest
 
 ARG config_templates=""
 LABEL kuscia.secretflow.config-templates=$config_templates

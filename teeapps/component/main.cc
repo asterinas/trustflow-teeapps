@@ -32,8 +32,8 @@ using namespace teeapps::component;
 
 std::unique_ptr<secretflow::spec::v1::CompListDef> COMP_LIST =
     std::make_unique<secretflow::spec::v1::CompListDef>();
-constexpr static char COMP_LIST_NAME[] = "trustedflow";
-constexpr static char COMP_LIST_DESC[] = "First-party TrustedFlow components.";
+constexpr static char COMP_LIST_NAME[] = "trustflow";
+constexpr static char COMP_LIST_DESC[] = "First-party TrustFlow components.";
 constexpr static char COMP_LIST_VERSION[] = "0.0.1";
 
 constexpr static char COMP_LIST_FILE[] = "teeapps/component/comp_list.json";

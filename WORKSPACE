@@ -18,9 +18,9 @@ load("//bazel:repositories.bzl", "teeapps_dependencies")
 
 teeapps_dependencies()
 
-load("@trustedflow//bazel:repositories.bzl", "trustedflow_dependencies")
+load("@trustflow//bazel:repositories.bzl", "trustflow_dependencies")
 
-trustedflow_dependencies()
+trustflow_dependencies()
 
 load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
 

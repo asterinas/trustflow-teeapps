@@ -36,7 +36,7 @@ bazel_version_repository = repository_rule(
 def teeapps_dependencies():
     """This module contains build rules for project dependencies.
     """
-    _com_github_trustedflow()
+    _com_github_trustflow()
     _com_github_grpc_grpc()
     _com_github_rules_proto_grpc()
     _com_github_gflags_gflags()
@@ -49,15 +49,15 @@ def teeapps_dependencies():
     _com_github_sf_spec()
     _com_github_kuscia_proto()
 
-def _com_github_trustedflow():
+def _com_github_trustflow():
     maybe(
         http_archive,
-        name = "trustedflow",
-        sha256 = "fb4889b47b7c849820220a725ed77d9b0c7831328846740fde27a8638cda32d9",
-        strip_prefix = "trustedflow-f366c6bf86dc63dc024b13b162e38a117455f7f8",
+        name = "trustflow",
+        sha256 = "cb1f7364aa03ecddfaea13eb8a12769cbf04e1a0225ac29a371e87a88b3c8470",
+        strip_prefix = "trustflow-c0414d0bd06ca209933c534942f7dcc8e2aedec5",
         type = "tar.gz",
         urls = [
-            "https://github.com/secretflow/trustedflow/archive/f366c6bf86dc63dc024b13b162e38a117455f7f8.tar.gz",
+            "https://github.com/asterinas/trustflow/archive/c0414d0bd06ca209933c534942f7dcc8e2aedec5.tar.gz",
         ],
     )
 
