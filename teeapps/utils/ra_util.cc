@@ -18,8 +18,8 @@
 #include "absl/strings/escaping.h"
 #include "cppcodec/base64_rfc4648.hpp"
 #include "spdlog/spdlog.h"
-#include "trustedflow/attestation/common/constants.h"
-#include "trustedflow/attestation/generation/wrapper/generator_wrapper.h"
+#include "trustflow/attestation/common/constants.h"
+#include "trustflow/attestation/generation/wrapper/generator_wrapper.h"
 #include "yacl/crypto/hash/hash_utils.h"
 
 namespace teeapps {
@@ -28,7 +28,7 @@ namespace utils {
 secretflowapis::v2::sdc::UnifiedAttestationReport GenRaReport(
     yacl::ByteContainerView user_data) {
   auto generator =
-      trustedflow::attestation::generation::CreateAttestationGenerator();
+      trustflow::attestation::generation::CreateAttestationGenerator();
   secretflowapis::v2::sdc::UnifiedAttestationGenerationParams gen_params;
   gen_params.set_tee_identity("1");
   gen_params.set_report_type("Passport");

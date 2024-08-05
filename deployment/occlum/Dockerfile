@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM secretflow/trustedflow-dev-occlum-ubuntu22.04:latest as builder
+FROM secretflow/trustflow-dev-occlum-ubuntu22.04:latest as builder
 
 
 WORKDIR /home/admin/dev
@@ -27,7 +27,7 @@ COPY scripts/build_occlum.sh ./scripts/build_occlum.sh
 
 RUN bash ./scripts/build_occlum.sh
 
-FROM secretflow/trustedflow-release-occlum-ubuntu22.04:latest
+FROM secretflow/trustflow-release-occlum-ubuntu22.04:latest
 
 # for occlum build, we need to install following pkgs
 RUN apt update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt install -y \

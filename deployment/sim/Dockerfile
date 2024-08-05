@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM secretflow/trustedflow-dev-ubuntu22.04:latest as builder
+FROM secretflow/trustflow-dev-ubuntu22.04:latest as builder
 
 WORKDIR /home/admin/dev
 

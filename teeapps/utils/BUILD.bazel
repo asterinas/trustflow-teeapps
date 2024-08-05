@@ -33,7 +33,7 @@ teeapps_cc_library(
         "@com_google_absl//absl/strings",
         "@cppcodec",
         "@sf_apis//:cc_sf_apis_grpc",
-        "@trustedflow//trustedflow/attestation/generation/wrapper:generator_wrapper",
+        "@trustflow//trustflow/attestation/generation/wrapper:generator_wrapper",
         "@yacl//yacl/crypto/hash:hash_utils",
     ],
 )

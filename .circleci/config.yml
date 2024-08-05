@@ -45,7 +45,7 @@ jobs:
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
     docker:
-      - image: secretflow/trustedflow-dev-ubuntu22.04:latest
+      - image: secretflow/trustflow-dev-ubuntu22.04:latest
     resource_class: 2xlarge+
     shell: /bin/bash --login -eo pipefail
     # Add steps to the job
@@ -53,7 +53,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: "build and test"
+          name: "Install packages"
           command: |
             set -ex
             apt update
@@ -63,11 +63,13 @@ jobs:
             conda create -n teeapps python=3.8.10 -y
             conda activate teeapps
             pip install pandas xgboost statsmodels scikit-learn lightgbm
-
+      - run:
+          name: "build and test"
+          command: |
+            set -ex
             mkdir -p ~/.ssh && ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
             bazel --output_base=target build //teeapps/...
             bazel --output_base=target test //teeapps/...
-            
   docker_image_publish:
     docker:
       - image: cimg/deploy:2023.06.1
@@ -86,7 +88,7 @@ jobs:
             docker login -u secretflow -p ${DOCKER_DEPLOY_TOKEN}
             # login docker - aliyun
             docker login -u ${ALIYUN_DOCKER_USERNAME} -p ${ALIYUN_DOCKER_PASSWORD} secretflow-registry.cn-hangzhou.cr.aliyuncs.com
-            
+
             case "$PLATFORM" in
               sim)
                 echo "build and publish in sim mode, version: ${COMMON_VERSION}"

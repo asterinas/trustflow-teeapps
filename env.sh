@@ -19,8 +19,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 DOCKER=docker
 project=teeapps
 
-OCCLUM_DEV_IMAGE=secretflow/trustedflow-dev-occlum-ubuntu22.04:latest
-DEV_IMAGE=secretflow/trustedflow-dev-ubuntu22.04:latest
+OCCLUM_DEV_IMAGE=secretflow/trustflow-dev-occlum-ubuntu22.04:latest
+DEV_IMAGE=secretflow/trustflow-dev-ubuntu22.04:latest
 
 SGX2_ENCLAVE_TREE_DEVICE="/dev/sgx/enclave"
 SGX2_PROVISION_TREE_DEVICE="/dev/sgx/provision"

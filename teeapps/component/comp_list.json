@@ -1,6 +1,6 @@
 {
-    "name": "trustedflow",
-    "desc": "First-party TrustedFlow components.",
+    "name": "trustflow",
+    "desc": "First-party TrustFlow components.",
     "version": "0.0.1",
     "comps": [
         {

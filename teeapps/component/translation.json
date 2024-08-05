@@ -1,7 +1,7 @@
 {
     ".": {
-        "trustedflow": "trustedflow",
-        "First-party TrustedFlow components.": "官方TrustedFlow组件"
+        "trustflow": "trustflow",
+        "First-party TrustFlow components.": "官方TrustFlow组件"
     },
     "feature/woe_binning:0.0.1": {
         "feature": "特征工程",
