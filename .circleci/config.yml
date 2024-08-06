@@ -53,7 +53,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: "Install packages"
+          name: "build and test"
           command: |
             set -ex
             apt update
@@ -63,13 +63,11 @@ jobs:
             conda create -n teeapps python=3.8.10 -y
             conda activate teeapps
             pip install pandas xgboost statsmodels scikit-learn lightgbm
-      - run:
-          name: "build and test"
-          command: |
-            set -ex
+
             mkdir -p ~/.ssh && ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
             bazel --output_base=target build //teeapps/...
             bazel --output_base=target test //teeapps/...
+            
   docker_image_publish:
     docker:
       - image: cimg/deploy:2023.06.1
