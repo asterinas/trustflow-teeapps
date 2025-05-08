@@ -14,11 +14,13 @@
 
 #include "teeapps/local/local_task_config.h"
 
+#include "cppcodec/base32_rfc4648_unpadded.hpp"
 #include "cppcodec/base64_rfc4648.hpp"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 #include "yacl/base/exception.h"
+#include "yacl/crypto/hash/hash_utils.h"
 #include "yacl/crypto/sign/rsa_signing.h"
 
 #include "teeapps/utils/crypto_util.h"
@@ -100,6 +102,18 @@ void LocalTaskConfig::SetFromJson(const std::string& local_task_config_json) {
     YACL_THROW("sign_algorithm {} not support",
                tee_task_config_.sign_algorithm());
   }
+
+  // verify task_initiator_id
+  const auto party_pubkey = yacl::crypto::LoadX509CertPublicKeyFromBuf(
+      tee_task_config_.task_initiator_certs(0));
+  const auto party_pubkey_hash =
+      yacl::crypto::Sha256(yacl::crypto::ExportPublicKeyToDerBuf(party_pubkey));
+  const std::string party_id =
+      cppcodec::base32_rfc4648_unpadded::encode(party_pubkey_hash);
+  YACL_ENFORCE(
+      tee_task_config_.task_initiator_id() == party_id,
+      "invalid task_initiator_id {}, the party id derive from cert is {}",
+      tee_task_config_.task_initiator_id(), party_id);
 
   const auto task_body_bytes =
       cppcodec::base64_rfc4648::decode(tee_task_config_.task_body());
