@@ -69,7 +69,7 @@ class UnitTests(unittest.TestCase):
         with open(TEST_OUTPUT_PATH, newline="") as csvfile:
             reader = csv.reader(csvfile)
             rows = [row for row in reader]
-        self.assertEqual(rows[1][0], "-1.540445040947149")
+        self.assertAlmostEqual(float(rows[1][0]), -1.540445040947149)
 
         with open(TEST_OUTPUT_SCHEMA_PATH, "r") as schema_f:
             schema_json = schema_f.read()

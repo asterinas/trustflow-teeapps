@@ -19,6 +19,9 @@ import sys
 
 import numpy as np
 import pandas
+from google.protobuf import json_format
+from secretflow.spec.v1.component_pb2 import Attribute
+from secretflow.spec.v1.report_pb2 import Descriptions, Div, Report, Tab, Table
 from teeapps.biz.common import common
 
 COMPONENT_NAME = "woe_binning"
@@ -146,7 +149,7 @@ def run_woe_binning(task_config: dict):
     outputs = task_config[common.OUTPUTS]
 
     assert len(inputs) == 1, f"{COMPONENT_NAME} should have only 1 input"
-    assert len(outputs) == 1, f"{COMPONENT_NAME} should have only 1 output"
+    assert len(outputs) == 2, f"{COMPONENT_NAME} should have only 2 output"
     assert (
         len(inputs[0][common.SCHEMA][common.FEATURES]) > 0
     ), "features should not be empty"
@@ -155,8 +158,7 @@ def run_woe_binning(task_config: dict):
     df = common.gen_data_frame(inputs[0])
 
     feature_selects = inputs[0][FEATURE_SELECTS]
-    labels = inputs[0][common.SCHEMA][common.LABELS]
-    assert len(labels) == 1, f"{COMPONENT_NAME} inputs should have only 1 label"
+    label = inputs[0][LABEL][0]
 
     binning_method = task_config[BINNING_METHOD]
     positive_label = task_config[POSITIVE_LABEL]
@@ -168,7 +170,7 @@ def run_woe_binning(task_config: dict):
         report, rule = binning(
             df,
             feature,
-            labels[0],
+            label,
             positive_label,
             bin_num,
             binning_method,
@@ -176,8 +178,85 @@ def run_woe_binning(task_config: dict):
         reports.append(report)
         rules.append(rule)
 
+    report_pb = Report(
+        name="woe report",
+        tabs=[
+            Tab(
+                name="general",
+                divs=[
+                    Div(
+                        children=[
+                            Div.Child(
+                                type="descriptions",
+                                descriptions=Descriptions(
+                                    items=[
+                                        Descriptions.Item(
+                                            name=FEATURE,
+                                            type="str",
+                                            value=Attribute(ss=report[FEATURE]),
+                                        ),
+                                        Descriptions.Item(
+                                            name=BIN_COUNT,
+                                            type="int",
+                                            value=Attribute(i64=report[BIN_COUNT]),
+                                        ),
+                                        Descriptions.Item(
+                                            name=IV,
+                                            type="float",
+                                            value=Attribute(f=report[IV]),
+                                        ),
+                                    ],
+                                ),
+                            )
+                        ],
+                    )
+                ],
+            ),
+            Tab(
+                divs=[
+                    Div(
+                        children=[
+                            Div.Child(
+                                type="table",
+                                table=Table(
+                                    headers=[
+                                        Table.HeaderItem(name=LABEL, type="str"),
+                                        Table.HeaderItem(name=WOE, type="float"),
+                                        Table.HeaderItem(name=IV, type="float"),
+                                        Table.HeaderItem(name=TOTAL, type="int"),
+                                        Table.HeaderItem(name=POS_COUNT, type="int"),
+                                    ],
+                                    rows=[
+                                        Table.Row(
+                                            items=[
+                                                Attribute(s=r[LABEL]),
+                                                Attribute(f=r[WOE]),
+                                                Attribute(f=r[IV]),
+                                                Attribute(i64=r[TOTAL]),
+                                                Attribute(i64=r[POS_COUNT]),
+                                            ]
+                                        )
+                                        for r in report[BINS]
+                                    ],
+                                ),
+                            )
+                        ],
+                    )
+                ],
+            ),
+        ],
+    )
+
     with open(outputs[0][common.DATA_PATH], "w") as rule_f:
         json.dump(rules, rule_f)
+
+    report_json = json_format.MessageToJson(
+        report_pb,
+        preserving_proto_field_name=True,
+        indent=0,
+    )
+    with open(outputs[1][common.DATA_PATH], "w") as report_f:
+        report_f.write(report_json)
 
 
 def main():

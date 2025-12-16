@@ -17,6 +17,7 @@ import csv
 import logging
 from typing import Literal
 
+import numpy as np
 import pandas
 from secretflow.spec.v1 import data_pb2
 
@@ -50,6 +51,19 @@ TABLE_SCHEMA_INT_TYPE_LIST = [
 ]
 
 
+def convert_numpy_to_python(value):
+    if isinstance(value, np.integer):
+        return int(value)
+    elif isinstance(value, np.floating):
+        return float(value)
+    elif isinstance(value, np.complexfloating):
+        return complex(value)
+    elif isinstance(value, np.bool_):
+        return bool(value)
+    else:
+        return value
+
+
 def sf_to_pd_type(
     sf_type: Literal[
         "int8",
@@ -67,7 +81,7 @@ def sf_to_pd_type(
         "int",
         "float",
         "str",
-    ]
+    ],
 ) -> Literal["float64", "int64", "bool", "object"]:
     if sf_type in TABLE_SCHEMA_INT_TYPE_LIST:
         return "int64"
@@ -145,7 +159,8 @@ def get_col_types(task_input: dict, col_names: list) -> list:
                 ]
             )
         else:
-            raise RuntimeError(f"{col_name} not found in schema")
+            schema = task_input[SCHEMA]
+            raise RuntimeError(f"{col_name} not found in schema {schema}")
     return col_types
 
 
@@ -171,6 +186,7 @@ def gen_data_frame(
     task_input: dict,
     file_path: str = None,
     usecols: list = None,
+    nrows: int = None,
 ) -> pandas.DataFrame:
     data_path = file_path if file_path else task_input[DATA_PATH]
     assert data_path, "Data path is empty."
@@ -189,26 +205,52 @@ def gen_data_frame(
         usecols=usecols,
         header=0,
         delimiter=dialect.delimiter,
+        nrows=nrows,
     )
 
 
 def gen_output_schema(
-    df: pandas.DataFrame, schema: data_pb2.TableSchema
+    df: pandas.DataFrame,
+    schema: data_pb2.TableSchema,
+    default_feature: bool = False,
+    use_schema_col_type: bool = False,
 ) -> data_pb2.TableSchema:
     output_schema = data_pb2.TableSchema()
+
+    schema_col_types = {}
+    if use_schema_col_type:
+        schema_col_types.update(zip(schema.ids, schema.id_types))
+        schema_col_types.update(zip(schema.features, schema.feature_types))
+        schema_col_types.update(zip(schema.labels, schema.label_types))
 
     for col in df.columns:
         if col in schema.ids:
             output_schema.ids.append(col)
-            output_schema.id_types.append(pd_type_to_sf(str(df[col].dtype)))
+
+            if use_schema_col_type:
+                output_schema.id_types.append(schema_col_types[col])
+            else:
+                output_schema.id_types.append(pd_type_to_sf(str(df[col].dtype)))
         elif col in schema.features:
             output_schema.features.append(col)
-            output_schema.feature_types.append(pd_type_to_sf(str(df[col].dtype)))
+
+            if use_schema_col_type:
+                output_schema.feature_types.append(schema_col_types[col])
+            else:
+                output_schema.feature_types.append(pd_type_to_sf(str(df[col].dtype)))
         elif col in schema.labels:
             output_schema.labels.append(col)
-            output_schema.label_types.append(pd_type_to_sf(str(df[col].dtype)))
+
+            if use_schema_col_type:
+                output_schema.label_types.append(schema_col_types[col])
+            else:
+                output_schema.label_types.append(pd_type_to_sf(str(df[col].dtype)))
         else:
-            raise RuntimeError(f"{col} not found in schema")
+            if default_feature:
+                output_schema.features.append(col)
+                output_schema.feature_types.append(pd_type_to_sf(str(df[col].dtype)))
+            else:
+                raise RuntimeError(f"{col} not found in schema")
     return output_schema
 
 

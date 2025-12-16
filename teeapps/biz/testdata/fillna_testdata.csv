@@ -1,0 +1,6 @@
+id,a,b,c,d
+1,"NA",1,0.3,False
+2,"a","NA",1.2,True
+3,"b",2,"NA","NA"
+4,"NA","NA",-2.3,False
+5,"c",3,10.0,False

@@ -51,7 +51,7 @@ LABEL kuscia.secretflow.translation=$translation
 COPY --from=builder /home/teeapp/occlum/occlum_instance /home/teeapp/occlum/occlum_instance
 COPY --from=builder /home/teeapp/python-occlum /home/teeapp/python-occlum
 
-ENV PATH /home/teeapp/python-occlum/bin:$PATH
+ENV PATH=/home/teeapp/python-occlum/bin:$PATH
 
 WORKDIR /home/teeapp/occlum/occlum_instance
 

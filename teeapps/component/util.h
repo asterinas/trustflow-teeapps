@@ -21,6 +21,7 @@
 #include <numeric>
 #include <optional>
 #include <sstream>
+#include <stdexcept>
 
 #include "google/protobuf/util/json_util.h"
 
@@ -56,13 +57,29 @@ struct DistDataType {
   static constexpr char LR_MODEL[] = "sf.model.lr";
   static constexpr char XGB_MODEL[] = "sf.model.xgb";
   static constexpr char LGBM_MODEL[] = "sf.model.lgbm";
-  static constexpr char WOE_RUNNING_RULE[] = "sf.rule.woe_binning";
+  static constexpr char WOE_BINNING_RULE[] = "sf.rule.woe_binning";
+  static constexpr char ONEHOT_ENCODE_RULE[] = "sf.rule.onehot_encode";
+  static constexpr char EQUAL_WIDTH_BINNING_RULE[] =
+      "sf.rule.equal_width_binning";
+  static constexpr char EQUAL_FREQUENCY_BINNING_RULE[] =
+      "sf.rule.equal_frequency_binning";
+  static constexpr char CHI_SQUARED_BINNING_RULE[] =
+      "sf.rule.chi_squared_binning";
   static constexpr char REPORT[] = "sf.report";
 
   static const std::unordered_set<std::string>& get_all_types() {
     static const std::unordered_set<std::string> types{
-        VERTICAL_TABLE, INDIVIDUAL_TABLE, LR_MODEL, XGB_MODEL,
-        LGBM_MODEL,     WOE_RUNNING_RULE, REPORT};
+        VERTICAL_TABLE,
+        INDIVIDUAL_TABLE,
+        LR_MODEL,
+        XGB_MODEL,
+        LGBM_MODEL,
+        WOE_BINNING_RULE,
+        ONEHOT_ENCODE_RULE,
+        EQUAL_WIDTH_BINNING_RULE,
+        EQUAL_FREQUENCY_BINNING_RULE,
+        CHI_SQUARED_BINNING_RULE,
+        REPORT};
     return types;
   }
 };
@@ -375,15 +392,27 @@ struct get_attr_info<secretflow::spec::v1::AttrType::AT_BOOLS> {
   typedef bool attr_type;
 };
 
+// Helper function to convert std::string to const char*
+inline const char* to_cstr(const std::string& s) { return s.c_str(); }
+
+// Overload for const char* to return it directly
+inline const char* to_cstr(const char* s) { return s; }
+
+// Variadic template function to handle conversion
+template <typename T>
+T to_cstr(T value) {
+  return value;
+}
+
 template <typename... Args>
 std::string string_format(const char* format, Args... args) {
-  size_t length = std::snprintf(nullptr, 0, format, args...);
+  size_t length = std::snprintf(nullptr, 0, format, to_cstr(args)...);
   if (length == 0) {
     return "";
   }
 
   char* buf = new char[length + 1];
-  std::snprintf(buf, length + 1, format, args...);
+  std::snprintf(buf, length + 1, format, to_cstr(args)...);
 
   std::string str(buf);
   delete[] buf;

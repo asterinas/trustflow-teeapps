@@ -15,9 +15,13 @@
 #include "teeapps/framework/app.h"
 
 #include <filesystem>
+#include <iostream>
+#include <sstream>
+#include <string>
 
 #include "absl/strings/str_split.h"
 #include "cppcodec/base64_rfc4648.hpp"
+#include "google/protobuf/util/json_util.h"
 #include "spdlog/spdlog.h"
 #include "yacl/crypto/hash/hash_utils.h"
 #include "yacl/crypto/key_utils.h"
@@ -67,6 +71,18 @@ std::string GenCmd(const std::string& component_name, const std::string& plat) {
   }
 }
 
+std::string GenCompListStr(
+    const std::map<std::string, secretflow::spec::v1::ComponentDef>& comp_map) {
+  std::stringstream ss;
+  int index = 0;
+  for (auto it = comp_map.cbegin(); it != comp_map.cend(); it++) {
+    ss << "[" << index << "] " << it->first << std::endl;
+    index++;
+  }
+
+  return ss.str();
+}
+
 }  // namespace
 
 App::App(const std::string& plat, const std::string& app_mode,
@@ -103,13 +119,25 @@ App::App(const std::string& plat, const std::string& app_mode,
     YACL_THROW("app mode {} not support", app_mode_);
   }
 
-  const auto comp_def =
-      teeapps::component::COMP_DEF_MAP.find(teeapps::component::GenCompFullName(
-          node_eval_param_.domain(), node_eval_param_.name(),
-          node_eval_param_.version()));
+  google::protobuf::util::JsonPrintOptions json_print_options;
+  json_print_options.preserve_proto_field_names = true;
+  std::string node_eval_param_json_str;
   YACL_ENFORCE(
-      comp_def != teeapps::component::COMP_DEF_MAP.end(),
-      "can not find corresponding Component definition in COMP_DEF_MAP");
+      google::protobuf::util::MessageToJsonString(
+          node_eval_param_, &node_eval_param_json_str, json_print_options)
+          .ok());
+  SPDLOG_INFO("node_eval_param: \n{}", node_eval_param_json_str);
+
+  const std::string comp_full_name = teeapps::component::GenCompFullName(
+      node_eval_param_.domain(), node_eval_param_.name(),
+      node_eval_param_.version());
+
+  const auto comp_def = teeapps::component::COMP_DEF_MAP.find(comp_full_name);
+  YACL_ENFORCE(comp_def != teeapps::component::COMP_DEF_MAP.end(),
+               "can not find corresponding Component {} definition in "
+               "COMP_DEF_MAP : \n {}",
+               comp_full_name,
+               GenCompListStr(teeapps::component::COMP_DEF_MAP));
   component_def_ = comp_def->second;
 
   auto [pk_buf, sk_buf] = yacl::crypto::GenRsaKeyPairToPemBuf(kRsaBitLength);

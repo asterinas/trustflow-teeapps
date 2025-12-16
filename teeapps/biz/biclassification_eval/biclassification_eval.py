@@ -23,7 +23,6 @@ from google.protobuf import json_format
 from secretflow.spec.v1.component_pb2 import Attribute
 from secretflow.spec.v1.report_pb2 import Descriptions, Div, Report, Tab, Table
 from sklearn import metrics
-
 from teeapps.biz.common import common
 
 COMPONENT_NAME = "biclassification_eval"

@@ -20,7 +20,6 @@ import unittest
 from google.protobuf import json_format
 from secretflow.spec.v1.component_pb2 import Attribute
 from secretflow.spec.v1.report_pb2 import Descriptions, Div, Report, Tab
-
 from teeapps.biz.vif.vif import run_vif
 
 
@@ -64,7 +63,7 @@ class UnitTests(unittest.TestCase):
         report = Report()
         json_format.Parse(report_json, report)
         self.assertEqual(len(report.tabs[0].divs[0].children[0].descriptions.items), 2)
-        self.assertEqual(
+        self.assertAlmostEqual(
             report.tabs[0].divs[0].children[0].descriptions.items[0].value.f,
             4.199999809265137,
         )

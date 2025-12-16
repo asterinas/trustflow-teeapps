@@ -5,6 +5,532 @@
     "comps": [
         {
             "domain": "feature",
+            "name": "chi_squared_binning",
+            "desc": "Generate chi-squared binning rules for individual datasets.",
+            "version": "0.0.1",
+            "attrs": [
+                {
+                    "name": "max_bin_num",
+                    "desc": "Max bin counts for one feature. If provided, threshold will be ignored.",
+                    "type": "AT_INT",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "i64": "10"
+                        },
+                        "lower_bound_enabled": true,
+                        "lower_bound": {}
+                    }
+                },
+                {
+                    "name": "threshold",
+                    "desc": "threshold to merge neighbouring groups. If provided, max_bin_num will be ignored.",
+                    "type": "AT_FLOAT",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "f": 3.841
+                        },
+                        "lower_bound_enabled": true,
+                        "lower_bound": {}
+                    }
+                },
+                {
+                    "name": "positive_label",
+                    "desc": "Which value represent positive value in label.",
+                    "type": "AT_STRING",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "s": "1"
+                        }
+                    }
+                }
+            ],
+            "inputs": [
+                {
+                    "name": "input_data",
+                    "desc": "Input table.",
+                    "types": [
+                        "sf.table.individual"
+                    ],
+                    "attrs": [
+                        {
+                            "name": "feature_selects",
+                            "desc": "which features should be binned.",
+                            "col_min_cnt_inclusive": "1"
+                        },
+                        {
+                            "name": "label",
+                            "desc": "Label column.",
+                            "col_min_cnt_inclusive": "1",
+                            "col_max_cnt_inclusive": "1"
+                        }
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "chi_squared_binning_rule",
+                    "desc": "Output chi_squared binning rule.",
+                    "types": [
+                        "sf.rule.chi_squared_binning"
+                    ]
+                },
+                {
+                    "name": "report",
+                    "desc": "Chi_squared binning report.",
+                    "types": [
+                        "sf.report"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "feature",
+            "name": "chi_squared_substitution",
+            "desc": "Substitute datasets' cols by equal chi-squared binning substitution rules.",
+            "version": "0.0.1",
+            "inputs": [
+                {
+                    "name": "input_data",
+                    "desc": "Dataset to be substituted.",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                },
+                {
+                    "name": "chi_squared_binning_rule",
+                    "desc": "Chi-squared binning rule.",
+                    "types": [
+                        "sf.rule.chi_squared_binning"
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "output_data",
+                    "desc": "Output substituted dataset.",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                },
+                {
+                    "name": "report",
+                    "desc": "chi squared substitution report.",
+                    "types": [
+                        "sf.report"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "feature",
+            "name": "equal_frequency_binning",
+            "desc": "Generate equal frequency binning rules for individual datasets.",
+            "version": "0.0.1",
+            "attrs": [
+                {
+                    "name": "bin_num",
+                    "desc": "Bin counts for one feature.",
+                    "type": "AT_INT",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "i64": "10"
+                        },
+                        "lower_bound_enabled": true,
+                        "lower_bound": {}
+                    }
+                }
+            ],
+            "inputs": [
+                {
+                    "name": "input_data",
+                    "desc": "Input table.",
+                    "types": [
+                        "sf.table.individual"
+                    ],
+                    "attrs": [
+                        {
+                            "name": "feature_selects",
+                            "desc": "which features should be binned.",
+                            "col_min_cnt_inclusive": "1"
+                        }
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "equal_frequency_binning_rule",
+                    "desc": "Output equal frequency binning rule.",
+                    "types": [
+                        "sf.rule.equal_frequency_binning"
+                    ]
+                },
+                {
+                    "name": "report",
+                    "desc": "Equal width frequency report.",
+                    "types": [
+                        "sf.report"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "feature",
+            "name": "equal_frequency_substitution",
+            "desc": "Substitute datasets' cols by equal frequency binning substitution rules.",
+            "version": "0.0.1",
+            "inputs": [
+                {
+                    "name": "input_data",
+                    "desc": "Dataset to be substituted.",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                },
+                {
+                    "name": "equal_frequency_binning_rule",
+                    "desc": "Equal frequency binning rule.",
+                    "types": [
+                        "sf.rule.equal_frequency_binning"
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "output_data",
+                    "desc": "Output substituted dataset.",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "feature",
+            "name": "equal_width_binning",
+            "desc": "Generate equal width binning rules for individual datasets.",
+            "version": "0.0.1",
+            "attrs": [
+                {
+                    "name": "bin_num",
+                    "desc": "Bin counts for one feature.",
+                    "type": "AT_INT",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {
+                            "i64": "10"
+                        },
+                        "lower_bound_enabled": true,
+                        "lower_bound": {}
+                    }
+                }
+            ],
+            "inputs": [
+                {
+                    "name": "input_data",
+                    "desc": "Input table.",
+                    "types": [
+                        "sf.table.individual"
+                    ],
+                    "attrs": [
+                        {
+                            "name": "feature_selects",
+                            "desc": "which features should be binned.",
+                            "col_min_cnt_inclusive": "1"
+                        }
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "equal_width_binning_rule",
+                    "desc": "Output equal width binning rule.",
+                    "types": [
+                        "sf.rule.equal_width_binning"
+                    ]
+                },
+                {
+                    "name": "report",
+                    "desc": "Equal width binning report.",
+                    "types": [
+                        "sf.report"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "feature",
+            "name": "equal_width_substitution",
+            "desc": "Substitute datasets' cols by equal width binning substitution rules.",
+            "version": "0.0.1",
+            "inputs": [
+                {
+                    "name": "input_data",
+                    "desc": "Dataset to be substituted.",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                },
+                {
+                    "name": "equal_width_binning_rule",
+                    "desc": "Equal width binning rule.",
+                    "types": [
+                        "sf.rule.equal_width_binning"
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "output_data",
+                    "desc": "Output substituted dataset.",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "feature",
+            "name": "fillna",
+            "desc": "Fill na of a col.",
+            "version": "0.0.1",
+            "attrs": [
+                {
+                    "name": "strategy",
+                    "desc": "The strategy to fill NA. For string cols, only mode and constant options are allowed. If constant is selected, the corresponding constant value should be provided as well.",
+                    "type": "AT_STRING",
+                    "atomic": {
+                        "default_value": {
+                            "s": "constant"
+                        },
+                        "allowed_values": {
+                            "ss": [
+                                "constant",
+                                "max",
+                                "min",
+                                "mode",
+                                "median",
+                                "mean"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "constant_float",
+                    "desc": "Only valid when selected col is float and strategy is constant.",
+                    "type": "AT_FLOAT",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {}
+                    }
+                },
+                {
+                    "name": "constant_int64",
+                    "desc": "Only valid when selected col is int64 and strategy is constant.",
+                    "type": "AT_INT",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {}
+                    }
+                },
+                {
+                    "name": "constant_bool",
+                    "desc": "Only valid when selected col is bool and strategy is constant.",
+                    "type": "AT_BOOL",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {}
+                    }
+                },
+                {
+                    "name": "constant_str",
+                    "desc": "Only valid when selected col is str and strategy is constant.",
+                    "type": "AT_STRING",
+                    "atomic": {
+                        "is_optional": true,
+                        "default_value": {}
+                    }
+                }
+            ],
+            "inputs": [
+                {
+                    "name": "fillna_input",
+                    "desc": "Input table",
+                    "types": [
+                        "sf.table.individual"
+                    ],
+                    "attrs": [
+                        {
+                            "name": "col",
+                            "desc": "Column to fillna.",
+                            "col_min_cnt_inclusive": "1",
+                            "col_max_cnt_inclusive": "1"
+                        }
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "fillna_output",
+                    "desc": "Output table",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "feature",
+            "name": "normalization",
+            "desc": "Normalize cols.",
+            "version": "0.0.1",
+            "attrs": [
+                {
+                    "name": "strategies",
+                    "desc": "The strategy to normalize. standard: Standardize features by removing the mean and scaling to unit variance. max_abs: Scale each feature by its maximum absolute value. min_max: Transform features by scaling each feature to a given range.",
+                    "type": "AT_STRINGS",
+                    "atomic": {
+                        "list_max_length_inclusive": "-1",
+                        "default_value": {
+                            "ss": [
+                                "standard"
+                            ]
+                        },
+                        "allowed_values": {
+                            "ss": [
+                                "standard",
+                                "max_abs",
+                                "min_max"
+                            ]
+                        }
+                    }
+                }
+            ],
+            "inputs": [
+                {
+                    "name": "normalization_input",
+                    "desc": "Input table",
+                    "types": [
+                        "sf.table.individual"
+                    ],
+                    "attrs": [
+                        {
+                            "name": "cols",
+                            "desc": "Column(s) to normalize. Only numeric column(s) are allowed. ",
+                            "col_min_cnt_inclusive": "1"
+                        }
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "normalization_output",
+                    "desc": "Output table",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "feature",
+            "name": "onehot_encode",
+            "desc": "Generate One Hot binning rules for individual datasets.",
+            "version": "0.0.1",
+            "inputs": [
+                {
+                    "name": "input_data",
+                    "desc": "Input table.",
+                    "types": [
+                        "sf.table.individual"
+                    ],
+                    "attrs": [
+                        {
+                            "name": "cols",
+                            "desc": "which cols should be binned.",
+                            "col_min_cnt_inclusive": "1"
+                        }
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "onehot_encode_role",
+                    "desc": "Output One Hot encode rule.",
+                    "types": [
+                        "sf.rule.onehot_encode"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "feature",
+            "name": "onehot_substitution",
+            "desc": "Substitute datasets' cols by onehot substitution rules.",
+            "version": "0.0.1",
+            "inputs": [
+                {
+                    "name": "input_data",
+                    "desc": "Dataset to be substituted.",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                },
+                {
+                    "name": "onehot_encode_rule",
+                    "desc": "One Hot substitution rule.",
+                    "types": [
+                        "sf.rule.onehot_encode"
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "output_data",
+                    "desc": "Output substituted dataset.",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "feature",
+            "name": "sql_executor",
+            "desc": "Execute SQL on a table. NOTE: the table name is fixed to input_table. The last SQL must be SELECT statements.",
+            "version": "0.0.1",
+            "attrs": [
+                {
+                    "name": "statements",
+                    "desc": "SQL statements. Only supports sqlite. The table name is fixed to be input_table. The last statement must be SELECT statement.",
+                    "type": "AT_STRING",
+                    "atomic": {}
+                }
+            ],
+            "inputs": [
+                {
+                    "name": "sql_executor_input",
+                    "desc": "Input table",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "sql_executor_output",
+                    "desc": "Output table",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "feature",
             "name": "woe_binning",
             "desc": "Generate Weight of Evidence (WOE) binning rules for individual datasets.",
             "version": "0.0.1",
@@ -79,6 +605,13 @@
                     "desc": "Output WOE rule.",
                     "types": [
                         "sf.rule.woe_binning"
+                    ]
+                },
+                {
+                    "name": "report",
+                    "desc": "WOE binning report.",
+                    "types": [
+                        "sf.report"
                     ]
                 }
             ]
@@ -172,6 +705,54 @@
                             "desc": "The score value column name",
                             "col_min_cnt_inclusive": "1",
                             "col_max_cnt_inclusive": "1"
+                        }
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "reports",
+                    "desc": "Output report.",
+                    "types": [
+                        "sf.report"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "ml.eval",
+            "name": "multiclass_classification_eval",
+            "desc": "Statistics evaluation for a multi-class classification model on a dataset.",
+            "version": "0.0.1",
+            "attrs": [
+                {
+                    "name": "classes",
+                    "desc": "All possible classes in labels.",
+                    "type": "AT_STRINGS",
+                    "atomic": {
+                        "list_min_length_inclusive": "2",
+                        "list_max_length_inclusive": "-1"
+                    }
+                }
+            ],
+            "inputs": [
+                {
+                    "name": "predictions",
+                    "desc": "Input table with predictions",
+                    "types": [
+                        "sf.table.individual"
+                    ],
+                    "attrs": [
+                        {
+                            "name": "label",
+                            "desc": "The column of label. The value type must be int or string.",
+                            "col_min_cnt_inclusive": "1",
+                            "col_max_cnt_inclusive": "1"
+                        },
+                        {
+                            "name": "scores",
+                            "desc": "The column(s) of score. Please make sure the order must aligned with that of classes.",
+                            "col_min_cnt_inclusive": "2"
                         }
                     ]
                 }
@@ -1333,6 +1914,37 @@
                 {
                     "name": "test",
                     "desc": "Output test dataset.",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                }
+            ]
+        },
+        {
+            "domain": "preprocessing",
+            "name": "union",
+            "desc": "Merge tables horizontally between two parties. The schema of tables must be the same.",
+            "version": "0.0.1",
+            "inputs": [
+                {
+                    "name": "input1",
+                    "desc": "Table from party 1",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                },
+                {
+                    "name": "input2",
+                    "desc": "Table from party 2",
+                    "types": [
+                        "sf.table.individual"
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "union_output",
+                    "desc": "Output table",
                     "types": [
                         "sf.table.individual"
                     ]

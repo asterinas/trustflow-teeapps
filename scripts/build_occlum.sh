@@ -58,7 +58,7 @@ cd $target_dir/occlum
 # Initailize occlum workspace
 [ -d occlum_instance ] || occlum new occlum_instance
 
-[ -d $python_dir ] || conda create --prefix $python_dir -y python=3.8.10 pandas protobuf scikit-learn xgboost lightgbm statsmodels
+[ -d $python_dir ] || conda create --prefix $python_dir -y python=3.8.10 pandas pyarrow protobuf scikit-learn xgboost lightgbm statsmodels
 if [ ! -d $python_dir ]; then
   echo "Error: cannot stat '$python_dir' directory"
   exit 1

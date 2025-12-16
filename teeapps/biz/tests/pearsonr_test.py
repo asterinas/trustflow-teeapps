@@ -20,7 +20,6 @@ import unittest
 
 from google.protobuf import json_format
 from secretflow.spec.v1.report_pb2 import Div, Report, Tab, Table
-
 from teeapps.biz.pearsonr.pearsonr import run_pearsonr
 
 
@@ -63,7 +62,7 @@ class UnitTests(unittest.TestCase):
             report_json = report_f.read()
         report = Report()
         json_format.Parse(report_json, report)
-        self.assertEqual(
+        self.assertAlmostEqual(
             report.tabs[0].divs[0].children[0].table.rows[1].items[0].f,
             0.8728715777397156,
         )

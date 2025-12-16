@@ -26,6 +26,39 @@ py_test(
 )
 
 py_test(
+    name = "union_test",
+    srcs = ["union_test.py"],
+    data = [
+        "//teeapps/biz/testdata",
+    ],
+    deps = [
+        "//teeapps/biz/union",
+    ],
+)
+
+py_test(
+    name = "fillna_test",
+    srcs = ["fillna_test.py"],
+    data = [
+        "//teeapps/biz/testdata",
+    ],
+    deps = [
+        "//teeapps/biz/fillna",
+    ],
+)
+
+py_test(
+    name = "normalization_test",
+    srcs = ["normalization_test.py"],
+    data = [
+        "//teeapps/biz/testdata",
+    ],
+    deps = [
+        "//teeapps/biz/normalization",
+    ],
+)
+
+py_test(
     name = "biclassification_eval_test",
     srcs = ["biclassification_eval_test.py"],
     data = [
@@ -187,5 +220,75 @@ py_test(
     ],
     deps = [
         "//teeapps/biz/vif",
+    ],
+)
+
+py_test(
+    name = "onehot_encode_test",
+    srcs = ["onehot_encode_test.py"],
+    data = [
+        "//teeapps/biz/testdata",
+    ],
+    deps = [
+        "//teeapps/biz/onehot_encode",
+        "//teeapps/biz/onehot_substitution",
+    ],
+)
+
+py_test(
+    name = "equal_width_binning_test",
+    srcs = ["equal_width_binning_test.py"],
+    data = [
+        "//teeapps/biz/testdata",
+    ],
+    deps = [
+        "//teeapps/biz/equal_width_binning",
+        "//teeapps/biz/equal_width_substitution",
+    ],
+)
+
+py_test(
+    name = "equal_frequency_binning_test",
+    srcs = ["equal_frequency_binning_test.py"],
+    data = [
+        "//teeapps/biz/testdata",
+    ],
+    deps = [
+        "//teeapps/biz/equal_frequency_binning",
+        "//teeapps/biz/equal_frequency_substitution",
+    ],
+)
+
+py_test(
+    name = "chi_squared_binning_test",
+    srcs = ["chi_squared_binning_test.py"],
+    data = [
+        "//teeapps/biz/testdata",
+    ],
+    deps = [
+        "//teeapps/biz/chi_squared_binning",
+        "//teeapps/biz/chi_squared_substitution",
+    ],
+)
+
+py_test(
+    name = "sql_executor_test",
+    srcs = ["sql_executor_test.py"],
+    data = [
+        "//teeapps/biz/testdata",
+    ],
+    deps = [
+        "//teeapps/biz/sql_executor",
+    ],
+)
+
+py_test(
+    name = "multiclass_classification_eval_test",
+    srcs = ["multiclass_classification_eval_test.py"],
+    data = [
+        "//teeapps/biz/testdata",
+    ],
+    deps = [
+        "//teeapps/biz/multiclass_classification_eval",
     ],
 )
