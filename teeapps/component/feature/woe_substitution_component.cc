@@ -21,7 +21,7 @@ void WoeSubstitutionComponent::Init() {
   AddIo(IoType::INPUT, "input_data", "Dataset to be substituted.",
         {DistDataType::INDIVIDUAL_TABLE});
   AddIo(IoType::INPUT, "woe_rule", "WOE substitution rule.",
-        {DistDataType::WOE_RUNNING_RULE});
+        {DistDataType::WOE_BINNING_RULE});
   AddIo(IoType::OUTPUT, "output_data", "Output substituted dataset.",
         {DistDataType::INDIVIDUAL_TABLE});
 }

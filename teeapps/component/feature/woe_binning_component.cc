@@ -37,7 +37,9 @@ void WoeBinningComponent::Init() {
                           1),
             TableColParam("label", "Label column.", 1, 1)});
   AddIo(IoType::OUTPUT, "woe_rule", "Output WOE rule.",
-        {DistDataType::WOE_RUNNING_RULE});
+        {DistDataType::WOE_BINNING_RULE});
+  AddIo(IoType::OUTPUT, "report", "WOE binning report.",
+        {DistDataType::REPORT});
 }
 
 }  // namespace component

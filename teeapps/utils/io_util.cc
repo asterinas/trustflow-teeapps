@@ -25,7 +25,8 @@ namespace utils {
 namespace {
 constexpr int kMaxBufferSize = 4096;  // 4KB
 
-using UniqueFile = std::unique_ptr<FILE, decltype(&std::fclose)>;
+using UniqueFile =
+    std::unique_ptr<FILE, decltype(static_cast<int (*)(FILE*)>(&std::fclose))>;
 
 }  // namespace
 

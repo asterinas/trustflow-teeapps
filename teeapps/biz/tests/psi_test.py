@@ -20,6 +20,7 @@ import unittest
 
 from google.protobuf import json_format
 from secretflow.spec.v1 import data_pb2
+
 from teeapps.biz.psi.psi import run_psi
 
 TEST_CONFIG_JSON = """
@@ -27,7 +28,7 @@ TEST_CONFIG_JSON = """
   "component_name": "psi",
   "inputs":[
     {
-      "data_path": "teeapps/biz/testdata/breast_cancer/alice.csv",
+      "data_path": "teeapps/biz/testdata/breast_cancer/alice_raw.csv",
       "schema": {
         "ids": [
           "id"
@@ -57,7 +58,7 @@ TEST_CONFIG_JSON = """
       ]
     },
     {
-      "data_path": "teeapps/biz/testdata/breast_cancer/bob.csv",
+      "data_path": "teeapps/biz/testdata/breast_cancer/bob_raw.csv",
       "schema": {
         "ids": [
           "id"
@@ -127,7 +128,7 @@ TEST_OUTPUT_VALUE1 = [
     "0.1471",
     "0.2419",
     "0.07871",
-    "False",
+    "0",
 ]
 
 TEST_OUTPUT_IDS = ["id"]
@@ -144,18 +145,18 @@ TEST_OUTPUT_FEATURES = [
     "mean fractal dimension",
 ]
 TEST_OUTPUT_LABELS = ["target"]
-TEST_OUTPUT_ID_TYPES = ["int64"]
+TEST_OUTPUT_ID_TYPES = ["int"]
 TEST_OUTPUT_FEATURE_TYPES = [
-    "float64",
-    "float64",
-    "float64",
-    "float64",
-    "float64",
-    "float64",
-    "float64",
-    "float64",
-    "float64",
-    "float64",
+    "float",
+    "float",
+    "float",
+    "float",
+    "float",
+    "float",
+    "float",
+    "float",
+    "float",
+    "float",
 ]
 TEST_OUTPUT_LABEL_TYPES = ["bool"]
 

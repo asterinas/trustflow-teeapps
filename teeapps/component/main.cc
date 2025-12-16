@@ -15,8 +15,6 @@
 #include <math.h>
 #include <unistd.h>
 
-#include <fstream>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -168,11 +166,14 @@ int main() {
     rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(str_buffer);
     format_doc.Accept(writer);
     write_to_file(str_buffer.GetString(), COMP_LIST_FILE);
-
-    // get the translation of components
     std::string archieve_str = read_from_file(ALL_TRANSLATION_FILE);
     rapidjson::Document doc;
     doc.Parse(archieve_str.c_str());
+    if (!doc.IsObject()) {
+      std::cerr << "Parse of " << ALL_TRANSLATION_FILE << " failed."
+                << std::endl;
+      return -1;
+    }
     std::string res = gettext(COMP_LIST, doc);
     write_to_file(res, TRANSLATION_FILE);
   } catch (const std::exception& e) {

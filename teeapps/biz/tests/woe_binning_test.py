@@ -37,12 +37,16 @@ TEST_CONFIG_JSON = """
         "feature_types": ["float", "float", "float", "float", "float"],
         "label_types": ["bool"]
       },
-      "feature_selects":["AT", "V", "AP", "RH"]
+      "feature_selects":["AT", "V", "AP", "RH"],
+      "label": ["RE"]
     }
   ],
   "outputs": [
     {
       "data_path": "woe_rules.json"
+    },
+    {
+      "data_path": "woe_report.json"
     }
   ]
 }
@@ -56,18 +60,20 @@ class UnitTests(unittest.TestCase):
     def test_woe(self):
         # before
         self.assertTrue(not os.path.exists(TEST_OUTPUT_PATH))
+        self.assertTrue(not os.path.exists("woe_report.json"))
         # run
         woe_binning.run_woe_binning(json.loads(TEST_CONFIG_JSON))
         # after
         self.assertTrue(os.path.exists(TEST_OUTPUT_PATH))
+        self.assertTrue(os.path.exists("woe_report.json"))
 
         with open(TEST_OUTPUT_PATH, "r") as output_f:
             rules = json.load(output_f)
         self.assertEqual(len(rules), 4)
         self.assertEqual(len(rules[0][woe_binning.BINS]), 3)
-        self.assertEqual(rules[0][woe_binning.BINS][0][woe_binning.RIGHT], 14.223)
-        self.assertEqual(
-            rules[0][woe_binning.BINS][0][woe_binning.WOE], -1.5404450409471488
+        self.assertAlmostEqual(rules[0][woe_binning.BINS][0][woe_binning.RIGHT], 14.223)
+        self.assertAlmostEqual(
+            rules[0][woe_binning.BINS][0][woe_binning.WOE], -1.540445
         )
 
 

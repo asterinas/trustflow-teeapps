@@ -18,6 +18,7 @@
 #include <memory>
 #include <optional>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -54,7 +55,7 @@ class Component {
   std::string CheckStorage(const secretflow::spec::v1::StorageConfig& storage) {
     if (std::find(allowed_storage_types_.begin(), allowed_storage_types_.end(),
                   storage.type()) == allowed_storage_types_.end()) {
-      throw "storage_type is not supported.";
+      throw std::runtime_error("storage_type is not supported.");
     }
     return storage.local_fs().wd();
   }

@@ -53,11 +53,11 @@ def _com_github_trustflow():
     maybe(
         http_archive,
         name = "trustflow",
-        sha256 = "cb1f7364aa03ecddfaea13eb8a12769cbf04e1a0225ac29a371e87a88b3c8470",
-        strip_prefix = "trustflow-c0414d0bd06ca209933c534942f7dcc8e2aedec5",
+        sha256 = "2f8280549c09ec68afcd554d8fe258a8bd8b4da3fdfe9bae71193ad389a369ef",
+        strip_prefix = "trustflow-c6f33d0b7857be4e218ee6fb43ea042fdf4e4246",
         type = "tar.gz",
         urls = [
-            "https://github.com/asterinas/trustflow/archive/c0414d0bd06ca209933c534942f7dcc8e2aedec5.tar.gz",
+            "https://github.com/asterinas/trustflow/archive/c6f33d0b7857be4e218ee6fb43ea042fdf4e4246.tar.gz",
         ],
     )
 

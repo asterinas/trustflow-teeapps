@@ -175,15 +175,18 @@ void FillOutputDistData(
       "output size should be {}, got {}", component_def.outputs_size(),
       dist_datas.size());
   for (int i = 0; i < component_def.outputs_size(); i++) {
+    std::string data_source_id;
+    std::string output_id;
+    std::string output_uri;
+    teeapps::utils::ParseDmOutputUri(node_eval_param.output_uris(i),
+                                     data_source_id, output_id, output_uri);
+
     auto& dist_data = dist_datas.at(i);
-    dist_data.set_name(component_def.outputs(i).name());
+    dist_data.set_name(output_id);
     dist_data.set_type(component_def.outputs(i).types(0));
 
     // individual table/model/rule/report only has one data_ref
     auto data_ref = dist_data.add_data_refs();
-    std::string _, output_id, output_uri;
-    teeapps::utils::ParseDmOutputUri(node_eval_param.output_uris(i), _,
-                                     output_id, output_uri);
     data_ref->set_uri(output_uri);
     if (dist_data.type() ==
         teeapps::component::DistDataType::INDIVIDUAL_TABLE) {
@@ -206,7 +209,17 @@ void FillOutputDistData(
                dist_data.type() ==
                    teeapps::component::DistDataType::XGB_MODEL ||
                dist_data.type() ==
-                   teeapps::component::DistDataType::WOE_RUNNING_RULE) {
+                   teeapps::component::DistDataType::LGBM_MODEL ||
+               dist_data.type() ==
+                   teeapps::component::DistDataType::WOE_BINNING_RULE ||
+               dist_data.type() ==
+                   teeapps::component::DistDataType::ONEHOT_ENCODE_RULE ||
+               dist_data.type() ==
+                   teeapps::component::DistDataType::EQUAL_WIDTH_BINNING_RULE ||
+               dist_data.type() == teeapps::component::DistDataType::
+                                       EQUAL_FREQUENCY_BINNING_RULE ||
+               dist_data.type() ==
+                   teeapps::component::DistDataType::CHI_SQUARED_BINNING_RULE) {
       // meta be empty for models or rules
     } else {
       YACL_THROW(

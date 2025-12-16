@@ -54,7 +54,7 @@ mkdir -p teeapps/biz/common/
 cp $workspace_dir/teeapps/biz/common/common.py teeapps/biz/common/
 
 cd $target_dir
-[ -d $python_dir ] || conda create --prefix $python_dir -y python=3.8.10 pandas protobuf scikit-learn xgboost lightgbm statsmodels
+[ -d $python_dir ] || conda create --prefix $python_dir -y python=3.10.16 pandas pyarrow protobuf scikit-learn xgboost lightgbm statsmodels
 
 if [ ! -d $python_dir ];then
     echo "Error: cannot stat '$python_dir' directory"

@@ -13,16 +13,21 @@
 # limitations under the License.
 
 
+import csv
 import json
 import logging
-import math
 import os
+import subprocess
 import sys
-from concurrent import futures
+import tempfile
+from collections import defaultdict
+from time import perf_counter
+from typing import Dict, List, Tuple
 
-import pandas
+import pandas as pd
 from google.protobuf import json_format
 from secretflow.spec.v1 import data_pb2
+
 from teeapps.biz.common import common
 
 COMPONENT_NAME = "psi"
@@ -32,30 +37,178 @@ KEY = "key"
 DEFAULT_FILE_SIZE_LIMIT_IN_BYTES = 200 * 1024 * 1024
 
 
-def run_psi_part(file_list: list, inputs: dict, join_keys: list) -> pandas.DataFrame:
-    logging.info("Joining input data...")
+class CSVColumnManager:
+    @staticmethod
+    def get_header_map(file_path: str) -> Tuple[List[str], Dict[str, List[int]]]:
+        """获取列名映射表和重复列名统计"""
+        with open(file_path, "r") as f:
+            reader = csv.reader(f)
+            header = next(reader)
 
-    # read left dataframe
-    left_df = common.gen_data_frame(inputs[0], file_list[0])
-    col_type = ",".join(f"{col}:{left_df[col].dtype}" for col in left_df.columns)
-    logging.info(f"Left dataframe's column types are {col_type}")
+        name_indices = defaultdict(list)
+        for idx, name in enumerate(header):
+            name_indices[name.strip().lower()].append(idx)
 
-    # join right df one by one
-    for i in range(1, len(inputs)):
-        # read right dataframe
-        right_df = common.gen_data_frame(inputs[i], file_list[i])
-        col_type = ",".join(f"{col}:{right_df[col].dtype}" for col in right_df.columns)
-        logging.info(f"Right dataframe's column types are {col_type}")
+        return header, name_indices
 
-        assert len(join_keys[0]) == len(
-            join_keys[i]
-        ), "Join keys should be the same size"
+    @staticmethod
+    def resolve_column_names(
+        names: List[str], name_indices: Dict[str, List[int]], file_path: str
+    ) -> List[int]:
+        """将列名解析为索引，处理各种异常情况"""
+        resolved = []
+        for name in names:
+            normalized = name.strip().lower()
+            indices = name_indices.get(normalized, [])
 
-        left_df = left_df.merge(right_df, left_on=join_keys[0], right_on=join_keys[i])
-        key_type = ",".join(f"{col}:{left_df[col].dtype}" for col in left_df.columns)
-        logging.info(f"Joined dataframe's column types are {key_type}")
+            if not indices:
+                raise ValueError(f"列名 '{name}' 在文件 {file_path} 中不存在")
+            if len(indices) > 1:
+                raise ValueError(
+                    f"列名 '{name}' 在文件 {file_path} 中存在多个（索引：{indices}）"
+                )
 
-    return left_df
+            resolved.append(indices[0])
+        return resolved
+
+
+class CSVFullMergeProcessor:
+    def __init__(
+        self,
+        file1: str,
+        file2: str,
+        keys1: List[str],
+        keys2: List[str],
+        output: str = "merged.csv",
+    ):
+        self.file1 = file1
+        self.file2 = file2
+        self.keys1 = keys1
+        self.keys2 = keys2
+        self.output = output
+
+        # 解析文件结构
+        self.header1, self.key_indices1 = self._resolve_columns(file1, keys1)
+        self.header2, self.key_indices2 = self._resolve_columns(file2, keys2)
+
+        # 计算第二个文件的非键列索引
+        self.non_key_indices2 = [
+            idx for idx in range(len(self.header2)) if idx not in self.key_indices2
+        ]
+
+    def _resolve_columns(
+        self, file_path: str, key_names: List[str]
+    ) -> Tuple[List[str], List[int]]:
+        """解析文件列结构"""
+        header, name_indices = CSVColumnManager.get_header_map(file_path)
+        resolved_indices = CSVColumnManager.resolve_column_names(
+            key_names, name_indices, file_path
+        )
+        return header, resolved_indices
+
+    def _build_sort_command(
+        self, input_file: str, key_indices: List[int], output_file: str
+    ) -> str:
+        """构建多键排序命令"""
+        sort_keys = " ".join([f"-k{idx+1},{idx+1}" for idx in key_indices])
+        return (
+            f"(head -n 1 {input_file} && "
+            f"tail -n +2 {input_file} | "
+            f"grep -v '^[[:space:]]*$' | "
+            f"sort -t, {sort_keys}  --parallel=8 --buffer-size=1G --stable ) > {output_file}"
+        )
+
+    def _sort_file(
+        self, input_file: str, sorted_file: str, key_indices: List[int]
+    ) -> str:
+        """执行排序并返回排序后文件路径"""
+        # sorted_file = f"sorted_{input_file}"
+        cmd = self._build_sort_command(input_file, key_indices, sorted_file)
+
+        try:
+            subprocess.run(cmd, shell=True, check=True, executable="/bin/bash")
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"文件 {input_file} 排序失败: {e}")
+
+    def _compare_rows(self, row1: List[str], row2: List[str]) -> int:
+        """比较两个行的键值"""
+        for key_idx1, key_idx2 in zip(self.key_indices1, self.key_indices2):
+            val1 = row1[key_idx1] if key_idx1 < len(row1) else ""
+            val2 = row2[key_idx2] if key_idx2 < len(row2) else ""
+
+            if val1 < val2:
+                return -1
+            elif val1 > val2:
+                return 1
+        return 0
+
+    def merge(self):
+        """执行合并流程"""
+        # 并行排序两个文件
+
+        with tempfile.NamedTemporaryFile(
+            mode="w+", delete=True
+        ) as temp_sorted_file1, tempfile.NamedTemporaryFile(
+            mode="w+", delete=True
+        ) as temp_sorted_file2:
+
+            ps1 = perf_counter()
+
+            self._sort_file(self.file1, temp_sorted_file1.name, self.key_indices1)
+
+            ps2 = perf_counter()
+
+            print(f"排序耗时1：{ps2 - ps1} 秒")
+            self._sort_file(self.file2, temp_sorted_file2.name, self.key_indices2)
+
+            ps3 = perf_counter()
+
+            print(f"排序耗时2：{ps3 - ps2} 秒")
+
+            # 执行归并合并
+            with open(temp_sorted_file1.name) as f1, open(
+                temp_sorted_file2.name
+            ) as f2, open(self.output, "w", newline="") as out:
+
+                writer = csv.writer(out)
+                reader1, reader2 = csv.reader(f1), csv.reader(f2)
+
+                # 构建合并后的标题行
+                combined_header = self.header1 + [
+                    self.header2[i] for i in self.non_key_indices2
+                ]
+                writer.writerow(combined_header)
+
+                # 跳过原始标题行
+                next(reader1)
+                next(reader2)
+
+                def read_next_non_empty(reader):
+                    while True:
+                        row = next(reader, None)
+                        if row is None:
+                            return None
+                        # 跳过空行（空列表或只包含空字符串的行如 [，，，，]）
+                        if row and any(cell.strip() for cell in row):
+                            return row
+
+                # 初始化指针
+                row1 = read_next_non_empty(reader1)
+                row2 = read_next_non_empty(reader2)
+
+                while row1 and row2:
+                    cmp = self._compare_rows(row1, row2)
+
+                    if cmp == 0:
+                        # 合并第一个文件全列和第二个文件非键列
+                        merged_row = row1 + [row2[i] for i in self.non_key_indices2]
+                        writer.writerow(merged_row)
+                        row1 = read_next_non_empty(reader1)
+                        row2 = read_next_non_empty(reader2)
+                    elif cmp < 0:
+                        row1 = read_next_non_empty(reader1)
+                    else:
+                        row2 = read_next_non_empty(reader2)
 
 
 # Todo(jimi): for TEE, psi may not be a good name, rename later
@@ -68,78 +221,37 @@ def run_psi(task_config: dict) -> None:
 
     inputs = task_config[common.INPUTS]
     outputs = task_config[common.OUTPUTS]
-    assert 1 < len(inputs) <= 10, f"{COMPONENT_NAME} should have [2,10] inputs"
+    assert len(inputs) == 2, f"{COMPONENT_NAME} should have 2 inputs"
     assert len(outputs) == 1, f"{COMPONENT_NAME} should have only 1 output"
 
     # eg.[["id", "name"], ["ID", "NAME"]]
     join_keys = [input[KEY] for input in inputs]
+
+    output_path = outputs[0][common.DATA_PATH]
+    if os.path.exists(output_path):
+        os.remove(output_path)
+
+    merger = CSVFullMergeProcessor(
+        file1=inputs[0][common.DATA_PATH],
+        file2=inputs[1][common.DATA_PATH],
+        keys1=join_keys[0],  # 第一个文件的键列
+        keys2=join_keys[1],  # 第二个文件的键列
+        output=output_path,
+    )
+
+    merger.merge()
 
     # merge and store input schema
     merged_schema = data_pb2.TableSchema()
     for input in inputs:
         common.append_table_schema(merged_schema, input[common.SCHEMA])
 
-    files_size = [os.path.getsize(input[common.DATA_PATH]) for input in inputs]
-
-    file_num = math.ceil(max(files_size) / DEFAULT_FILE_SIZE_LIMIT_IN_BYTES)
-
-    logging.info(f"Inputs can be split into {file_num} files")
-
-    # split bigfile into small files
-    with futures.ThreadPoolExecutor() as executor:
-        small_files = list(
-            executor.map(
-                lambda x: common.split_bigfile_into_smallfiles(*x),
-                [
-                    (inputs[index], join_keys[index], file_num)
-                    for index in range(len(inputs))
-                ],
-            )
-        )
-
-    # deal every small file
-    # dump output
-    logging.info("Dumping part output...")
-    output_path = outputs[0][common.DATA_PATH]
-    if os.path.exists(output_path):
-        os.remove(output_path)
-    # df is used to get data schema
-    df = pandas.DataFrame()
-    has_head = False
-
-    # task executor parallelly
-    with futures.ThreadPoolExecutor() as executor:
-        df_list = list(
-            executor.map(
-                lambda x: run_psi_part(*x),
-                [
-                    (
-                        [files[index] for files in small_files],
-                        inputs,
-                        join_keys,
-                    )
-                    for index in range(file_num)
-                ],
-            )
-        )
-
-    # delete small files
-    with futures.ThreadPoolExecutor() as executor:
-        executor.map(
-            os.remove,
-            [file for files in small_files if len(files) > 1 for file in files],
-        )
-
-    logging.info("Dumping output dataframe...")
-    # get task result parallelly
-    for part_df in df_list:
-        df = part_df
-        df.to_csv(output_path, index=False, mode="a", header=not has_head)
-        has_head = True if not has_head else has_head
-
     logging.info("Dumping output schema...")
+
     # gen output TableSchema
-    output_schema = common.gen_output_schema(df, merged_schema)
+    df = pd.read_csv(output_path, nrows=5)
+
+    output_schema = common.gen_output_schema(df, merged_schema, False, True)
     schema_json = json_format.MessageToJson(output_schema)
     with open(outputs[0][common.DATA_SCHEMA_PATH], "w") as schema_f:
         schema_f.write(schema_json)

@@ -17,14 +17,32 @@ import json
 import logging
 import sys
 
+import numpy
 import pandas
 from google.protobuf import json_format
 from secretflow.spec.v1.component_pb2 import Attribute
 from secretflow.spec.v1.report_pb2 import Div, Report, Tab, Table
-
 from teeapps.biz.common import common
 
 COMPONENT_NAME = "table_statistics"
+
+
+def calculate_intervals_proportion(df):
+    result = {}
+
+    for column in df.columns:
+        if pandas.api.types.is_numeric_dtype(df[column]):
+            min_value, max_value = df[column].min(), df[column].max()
+            bins = numpy.linspace(min_value, max_value, 11)
+
+            bin_counts = pandas.cut(
+                df[column], bins=bins, include_lowest=True
+            ).value_counts(normalize=True)
+
+            result[column] = (bin_counts.sort_index().values * 100).tolist()
+        else:
+            result[column] = []
+    return result
 
 
 def table_statistics(table: pandas.DataFrame) -> pandas.DataFrame:
@@ -112,13 +130,17 @@ def run_table_statistics(task_config: dict):
         inputs[0], usecols=inputs[0][common.SCHEMA][common.FEATURES]
     )
     stats = table_statistics(df)
+    intervals_proportion = calculate_intervals_proportion(df)
 
-    headers = [Table.HeaderItem(name=col, desc="", type="str") for col in stats.columns]
+    headers = [
+        Table.HeaderItem(name=col, desc="", type="str") for col in stats.columns
+    ] + [Table.HeaderItem(name="distribution", desc="", type="floats")]
 
     rows = [
         Table.Row(
             name=rol_name,
-            items=[Attribute(s=str(stat_row[stat])) for stat in stats.columns],
+            items=[Attribute(s=str(stat_row[stat])) for stat in stats.columns]
+            + [Attribute(fs=intervals_proportion[rol_name])],
         )
         for rol_name, stat_row in stats.iterrows()
     ]
@@ -149,6 +171,7 @@ def run_table_statistics(task_config: dict):
         preserving_proto_field_name=True,
         indent=0,
     )
+
     with open(outputs[0][common.DATA_PATH], "w") as report_f:
         report_f.write(report_json)
 

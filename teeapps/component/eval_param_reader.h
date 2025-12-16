@@ -19,6 +19,7 @@
 #include <memory>
 #include <optional>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -43,7 +44,7 @@ class EvalParamReader {
   const secretflow::spec::v1::Attribute& GetAttr(
       const std::string& name) const {
     if (!instance_attrs_.count(name)) {
-      throw string_format("attr %s does not exist.", name);
+      throw std::runtime_error(string_format("attr %s does not exist.", name));
     }
     return instance_attrs_.at(name);
   }
@@ -51,7 +52,7 @@ class EvalParamReader {
   const secretflow::spec::v1::DistData& GetInput(
       const std::string& name) const {
     if (!instance_inputs_.count(name)) {
-      throw string_format("input %s does not exist.", name);
+      throw std::runtime_error(string_format("input %s does not exist.", name));
     }
     return instance_inputs_.at(name);
   }
@@ -60,14 +61,16 @@ class EvalParamReader {
       const std::string& input_name, const std::string& attr_name) const {
     std::string full_name = string_join({"input", input_name, attr_name}, "/");
     if (!instance_attrs_.count(full_name)) {
-      throw string_format("input attr %s does not exist.", full_name);
+      throw std::runtime_error(
+          string_format("input attr %s does not exist.", full_name));
     }
     return instance_attrs_.at(full_name);
   }
 
   const std::string& GetOutputUri(const std::string& name) const {
     if (!instance_outputs_.count(name)) {
-      throw string_format("output %s does not exist.", name);
+      throw std::runtime_error(
+          string_format("output %s does not exist.", name));
     }
     return instance_outputs_.at(name);
   }

@@ -15,6 +15,7 @@
 #include "component.h"
 
 #include <cmath>
+#include <stdexcept>
 
 namespace teeapps {
 namespace component {
@@ -32,14 +33,15 @@ void Component::AddAttr(const std::string& name, const std::string& desc,
                         const std::optional<int>& list_max_length_inclusive) {
   // check name
   if (!CheckReservedWords(name)) {
-    throw string_format("%s is a reserved word.", name);
+    throw std::runtime_error(string_format("%s is a reserved word.", name));
   }
 
   {
     // if T is bool type, skip
     if (allowed_values.has_value() &&
         (lower_bound.has_value() || upper_bound.has_value())) {
-      throw "allowed_values and bounds could not be set at the same time.";
+      throw std::runtime_error(
+          "allowed_values and bounds could not be set at the same time.");
     }
     // if T is bool type, skip
     if (allowed_values.has_value() && default_values.has_value()) {
@@ -47,14 +49,14 @@ void Component::AddAttr(const std::string& name, const std::string& desc,
         if (std::find(allowed_values.value().begin(),
                       allowed_values.value().end(),
                       value) == allowed_values.value().end()) {
-          throw "default_value is not in allowed_values";
+          throw std::runtime_error("default_value is not in allowed_values");
         }
       }
     }
     // if T is not number type(egg. string or bool), skip
     if (lower_bound.has_value() && upper_bound.has_value() &&
         lower_bound.value() > upper_bound.value()) {
-      throw "lower_bound is greater than upper_bound";
+      throw std::runtime_error("lower_bound is greater than upper_bound");
     }
 
     // if T is not number type(egg. string or bool), skip
@@ -65,7 +67,8 @@ void Component::AddAttr(const std::string& name, const std::string& desc,
                 (lower_bound_inclusive.has_value() &&
                  lower_bound_inclusive.value() &&
                  is_equal(value, lower_bound.value())))) {
-            throw "default_value fails bound check: lower_bound";
+            throw std::runtime_error(
+                "default_value fails bound check: lower_bound");
           }
         }
       }
@@ -76,7 +79,8 @@ void Component::AddAttr(const std::string& name, const std::string& desc,
                 (upper_bound_inclusive.has_value() &&
                  upper_bound_inclusive.value() &&
                  is_equal(value, upper_bound.value())))) {
-            throw "default_value fails bound check: upper_bound";
+            throw std::runtime_error(
+                "default_value fails bound check: upper_bound");
           }
         }
       }
@@ -87,10 +91,10 @@ void Component::AddAttr(const std::string& name, const std::string& desc,
   if (list_min_length_inclusive.has_value() &&
       list_max_length_inclusive.has_value() &&
       list_min_length_inclusive.value() > list_max_length_inclusive.value()) {
-    throw string_format(
+    throw std::runtime_error(string_format(
         "list_min_length_inclusive [%d] should not be greater than \
         list_max_length_inclusive[%d] ",
-        list_min_length_inclusive.value(), list_max_length_inclusive.value());
+        list_min_length_inclusive.value(), list_max_length_inclusive.value()));
   }
 
   //
@@ -160,7 +164,7 @@ void Component::AddIo(
     const std::vector<std::string>& types,
     const std::optional<std::vector<TableColParam>>& col_params) {
   if (!CheckReservedWords(name)) {
-    throw string_format("%s is a reserved word.", name);
+    throw std::runtime_error(string_format("%s is a reserved word.", name));
   }
   secretflow::spec::v1::IoDef* io_def = new secretflow::spec::v1::IoDef();
   io_def->set_name(name);
@@ -181,8 +185,8 @@ void Component::AddIo(
     }
   }
   if (!check_io_def(io_def)) {
-    throw string_format("IoDef %s: is not a supported DistData types",
-                        io_def->name());
+    throw std::runtime_error(string_format(
+        "IoDef %s: is not a supported DistData types", io_def->name()));
   }
   if (io_type == IoType::INPUT) {
     input_decls_.emplace_back(
@@ -208,7 +212,8 @@ Component::Definition() {
   // assign attr
   for (const auto& attr : attr_decls_) {
     if (argnames_.count(attr->name())) {
-      throw string_format("attr %s is duplicate.", attr->name());
+      throw std::runtime_error(
+          string_format("attr %s is duplicate.", attr->name()));
     }
     argnames_.insert(attr->name());
     comp_def->add_attrs()->CopyFrom(*attr.get());
@@ -216,7 +221,8 @@ Component::Definition() {
   // assign input
   for (const auto& io : input_decls_) {
     if (argnames_.count(io->name())) {
-      throw string_format("input %s is duplicate.", io->name());
+      throw std::runtime_error(
+          string_format("input %s is duplicate.", io->name()));
     }
     argnames_.insert(io->name());
     for (const auto& input_attr : io->attrs()) {
@@ -227,7 +233,8 @@ Component::Definition() {
   // assign output
   for (const auto& io : output_decls_) {
     if (argnames_.count(io->name())) {
-      throw string_format("output %s is duplicate.", io->name());
+      throw std::runtime_error(
+          string_format("output %s is duplicate.", io->name()));
     }
     argnames_.insert(io->name());
     comp_def->add_outputs()->CopyFrom(*io.get());
